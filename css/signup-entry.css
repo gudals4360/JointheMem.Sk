@@ -2,8 +2,13 @@
 .btn { display: grid; place-items: center; width: 100%; height: 52px; border: 0; border-radius: var(--radius-m); font-size: 16px; font-weight: 600; transition: all .2s ease-in-out; }
 .btn-primary { background: var(--primary-dark); color: #fff; }
 .btn-outline { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-.btn-kakao { background: #FEE500; color: #191923; }
 .btn:active { filter: brightness(.94); }
 .caption { margin: -4px 0 4px; font-size: 13px; color: var(--text-3); text-align: center; }
 .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 4px; font-size: 13px; color: var(--text-3); }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border-2); }
+.sns { display: flex; justify-content: center; gap: 16px; margin: 8px 0 4px; }
+.sns-btn { display: grid; place-items: center; width: 64px; height: 64px; border: 0; border-radius: 50%; font-size: 15px; font-weight: 700; color: #fff; transition: all .2s ease-in-out; }
+.sns-btn:active { filter: brightness(.92); }
+.sns-btn.kakao { background: #FEE500; }
+.sns-btn.kakao svg { width: 30px; height: 30px; fill: #191923; }
+.sns-btn.appcard { background: var(--primary-dark); }
