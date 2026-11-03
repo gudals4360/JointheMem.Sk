@@ -158,6 +158,15 @@
   .si-msg.is-info { color: var(--si-content-3); }
   .si-msg svg { flex-shrink: 0; margin-top: 1px; }
 
+  /* 이메일 확인: 메시지는 입력창 바로 아래, 확인 버튼은 그 오른쪽 (상태가 바뀌어도 높이 고정) */
+  .si-email-foot { display: flex; gap: 12px; align-items: flex-start; margin-top: 8px; min-height: 40px; }
+  .si-email-foot .si-msg { margin: 0; flex: 1; min-width: 0; padding-top: 2px; }
+  #siEmailCheck { height: 40px; padding: 0 14px; font-size: 13px; }
+  #siEmailCheck:disabled.is-done { color: var(--si-positive); border-color: var(--si-border-1); }
+  .si-btn.is-loading::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 6px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; vertical-align: -2px; animation: si-spin .7s linear infinite; }
+  @keyframes si-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .si-btn.is-loading::before { animation-duration: 2s; } }
+
   /* 비밀번호 규칙: 입력창 밖으로 꺼낸 체크리스트 */
   .si-rules { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: nowrap; gap: 10px; white-space: nowrap; }
   .si-rules li {
@@ -709,13 +718,13 @@ section{padding:0 16px;margin-top:20px}
         <label class="si-label" for="siEmailId">이메일 <span class="si-req">*</span></label>
         <div class="si-row">
           <div class="si-input-wrap">
-            <input class="si-input" id="siEmailId" name="emailId" type="text" inputmode="email"
+            <input class="si-input" id="siEmailId" name="emailId" type="email" inputmode="email" aria-describedby="siEmailMsg"
                    autocomplete="off" autocapitalize="off" spellcheck="false"
                    placeholder="이메일 아이디" />
           </div>
           <span class="si-at">@</span>
           <div class="si-input-wrap" id="siDomainWrap">
-            <select class="si-select is-placeholder" id="siDomainSelect" aria-label="이메일 도메인">
+            <select class="si-select is-placeholder" id="siDomainSelect" aria-label="이메일 도메인" aria-describedby="siEmailMsg">
               <option value="">선택</option>
               <option>naver.com</option>
               <option>gmail.com</option>
@@ -727,13 +736,16 @@ section{padding:0 16px;margin-top:20px}
               <option value="__direct">직접입력</option>
             </select>
             <input class="si-input has-end" id="siDomainInput" type="text" inputmode="email"
-                   autocapitalize="off" spellcheck="false" placeholder="직접입력" aria-label="이메일 도메인 직접입력" hidden />
+                   autocapitalize="off" spellcheck="false" placeholder="직접입력" aria-label="이메일 도메인 직접입력" aria-describedby="siEmailMsg" hidden />
             <button type="button" class="si-end-btn" id="siDomainReset" aria-label="도메인 목록에서 선택" hidden>
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l8 8M13 5l-8 8"/></svg>
             </button>
           </div>
         </div>
-        <p class="si-msg" id="siEmailMsg" hidden></p>
+        <div class="si-email-foot">
+          <p class="si-msg is-info" id="siEmailMsg" role="status" aria-live="polite"><span>이메일을 입력해 주세요.</span></p>
+          <button type="button" class="si-btn si-btn-outline" id="siEmailCheck" disabled>이메일 확인</button>
+        </div>
       </div>
 
       <!-- 자택주소 (선택) : 우편번호를 바로 입력해도 검색 -->
@@ -932,6 +944,23 @@ form.addEventListener("submit", (e) => {
         setTimeout(function () { resolve(taken.indexOf(id) === -1); }, 300);
       });
     },
+    /*
+     * [프로토타입 · 모의 응답] 실제 탈퇴 이력/가입 제한을 조회하는 코드가 아니다.
+     * 서버가 생기면 이 함수만 API 호출로 바꾼다. resolve 값:
+     *   'available'        신규 이메일
+     *   'rejoin_available' 이전 가입 이력이 있으나 재가입 허용
+     *   'unavailable'      가입 제한
+     * 모의 규칙: 아이디가 rejoin 으로 시작 → 재가입 가능, blocked 로 시작 → 가입 제한, 그 외 → 신규.
+     * (실제 서비스에서는 이메일 소유 확인 전에 탈퇴 이력을 노출하지 않도록 정책 검토 필요)
+     */
+    checkEmail: function (email) {
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          var id = email.split('@')[0].toLowerCase();
+          resolve(id.indexOf('rejoin') === 0 ? 'rejoin_available' : id.indexOf('blocked') === 0 ? 'unavailable' : 'available');
+        }, 700);
+      });
+    },
     // 다음 단계 주소. 비워두면 이동하지 않고 이벤트만 보낸다.
     nextUrl: '',
     // 본인인증 값이 없을 때 보여줄 예시 (화면 확인용)
@@ -1118,8 +1147,19 @@ form.addEventListener("submit", (e) => {
 
   /* ---------- 이메일 ---------- */
   var emailId = $('siEmailId'), dSel = $('siDomainSelect'), dInput = $('siDomainInput'),
-      dReset = $('siDomainReset'), emailMsg = $('siEmailMsg');
+      dReset = $('siDomainReset'), emailMsg = $('siEmailMsg'), emailBtn = $('siEmailCheck');
   var emailTouched = false;
+
+  // 이메일 확인 상태 (아이디·비밀번호 확인과 별개로, 확인이 끝나야 다음 단계로 진행)
+  var emailStatus = {
+    IDLE: 'idle',
+    INVALID: 'invalid',
+    CHECKING: 'checking',
+    AVAILABLE: 'available',
+    REJOIN_AVAILABLE: 'rejoin_available',
+    UNAVAILABLE: 'unavailable'
+  };
+  var emailState = { status: emailStatus.IDLE, checked: '', token: 0, failed: false };
 
   function domainValue() { return dInput.hidden ? dSel.value : dInput.value.trim().toLowerCase(); }
   function showDirect(on, value) {
@@ -1135,13 +1175,55 @@ form.addEventListener("submit", (e) => {
     return /^[A-Za-z0-9._%+-]+$/.test(emailId.value.trim()) &&
            /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domainValue() || '');
   }
-  function validateEmail() {
-    var hasAny = emailId.value.trim() || domainValue();
-    if (!emailTouched || !hasAny) { setMsg(emailMsg); setFieldError('email', false); return; }
-    if (!emailId.value.trim()) { setMsg(emailMsg, 'error', '이메일 아이디를 입력해 주세요.'); setFieldError('email', true); return; }
-    if (!domainValue()) { setMsg(emailMsg, 'error', '도메인을 선택해 주세요.'); setFieldError('email', true); return; }
-    if (!emailValid()) { setMsg(emailMsg, 'error', '이메일 형식을 확인해 주세요.'); setFieldError('email', true); return; }
-    setMsg(emailMsg); setFieldError('email', false);
+  // 확인이 끝난 이메일(신규 또는 재가입 가능)만 다음 단계로 보낸다
+  function emailOk() {
+    return (emailState.status === emailStatus.AVAILABLE || emailState.status === emailStatus.REJOIN_AVAILABLE) &&
+           emailState.checked === emailValue();
+  }
+
+  // 상태별 UI: 메시지(아이콘+문구) / 입력창 오류 테두리 / 확인 버튼
+  function renderEmail() {
+    var st = emailState.status, valid = emailValid(), id = emailId.value.trim();
+    var btnLabel = '이메일 확인', btnOff = !valid, loading = false, done = false;
+
+    if (st === emailStatus.CHECKING) {
+      setMsg(emailMsg, 'info', '이메일을 확인하고 있어요.'); setFieldError('email', false);
+      btnLabel = '확인 중'; btnOff = true; loading = true;
+    } else if (st === emailStatus.AVAILABLE) {
+      setMsg(emailMsg, 'success', '사용할 수 있는 이메일이에요.'); setFieldError('email', false);
+      btnLabel = '확인 완료'; btnOff = true; done = true;
+    } else if (st === emailStatus.REJOIN_AVAILABLE) {
+      // 탈퇴 이력이 있어도 재가입이 허용된 경우: 오류가 아니라 성공(초록·체크)으로 안내
+      setMsg(emailMsg, 'success', '이전에 사용한 이메일이에요. 다시 가입할 수 있어요.'); setFieldError('email', false);
+      btnLabel = '확인 완료'; btnOff = true; done = true;
+    } else if (st === emailStatus.UNAVAILABLE) {
+      setMsg(emailMsg, 'error', '현재 이 이메일로 가입할 수 없어요. 다른 이메일을 사용해 주세요.'); setFieldError('email', true);
+      btnLabel = '다시 입력'; btnOff = false;   // 다른 이메일 입력 경로
+    } else if (st === emailStatus.INVALID) {
+      var text = !id ? '이메일 아이디를 입력해 주세요.' : !domainValue() ? '도메인을 선택해 주세요.' : '올바른 이메일 형식으로 입력해 주세요.';
+      setMsg(emailMsg, 'error', text); setFieldError('email', true);
+    } else if (emailState.failed) {
+      setMsg(emailMsg, 'error', '이메일을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.'); setFieldError('email', false);
+    } else {
+      setMsg(emailMsg, 'info', valid ? '이메일 확인을 눌러 주세요.' : '이메일을 입력해 주세요.'); setFieldError('email', false);
+    }
+    emailBtn.disabled = btnOff;
+    emailBtn.textContent = btnLabel;
+    emailBtn.classList.toggle('is-loading', loading);
+    emailBtn.classList.toggle('is-done', done);
+    emailBtn.setAttribute('aria-busy', loading ? 'true' : 'false');
+  }
+
+  // valueChanged=true: 입력이 바뀐 것 → 이전 확인 결과를 지우고 진행 중인 확인은 무시
+  function syncEmail(valueChanged) {
+    if (valueChanged) {
+      emailState.token++; emailState.checked = ''; emailState.failed = false; emailState.status = emailStatus.IDLE;
+    }
+    if (emailState.status === emailStatus.IDLE || emailState.status === emailStatus.INVALID) {
+      var hasAny = emailId.value.trim() || domainValue();
+      emailState.status = (!emailValid() && emailTouched && hasAny) ? emailStatus.INVALID : emailStatus.IDLE;
+    }
+    renderEmail(); updateSubmit();
   }
 
   emailId.addEventListener('input', function () {
@@ -1157,17 +1239,41 @@ form.addEventListener("submit", (e) => {
         else showDirect(true, d);
       } else if (dSel.hidden === false) { dSel.focus(); }
     }
-    validateEmail(); updateSubmit();
+    syncEmail(true);
   });
-  emailId.addEventListener('blur', function () { if (emailId.value) emailTouched = true; validateEmail(); });
+  emailId.addEventListener('blur', function () { if (emailId.value) emailTouched = true; syncEmail(false); });
   dSel.addEventListener('change', function () {
     if (dSel.value === '__direct') { showDirect(true); }
     else dSel.classList.toggle('is-placeholder', !dSel.value);
-    emailTouched = true; validateEmail(); updateSubmit();
+    emailTouched = true; syncEmail(true);
   });
-  dInput.addEventListener('input', function () { validateEmail(); updateSubmit(); });
-  dInput.addEventListener('blur', function () { emailTouched = true; validateEmail(); });
-  dReset.addEventListener('click', function () { showDirect(false); dSel.focus(); validateEmail(); updateSubmit(); });
+  dInput.addEventListener('input', function () { syncEmail(true); });
+  dInput.addEventListener('blur', function () { emailTouched = true; syncEmail(false); });
+  dReset.addEventListener('click', function () { showDirect(false); dSel.focus(); syncEmail(true); });
+
+  emailBtn.addEventListener('click', function () {
+    // 가입 제한이면 버튼이 "다시 입력"으로 바뀌어 다른 이메일 입력으로 돌아간다
+    if (emailState.status === emailStatus.UNAVAILABLE) {
+      emailId.value = ''; showDirect(false); emailTouched = false;
+      syncEmail(true); emailId.focus();
+      return;
+    }
+    // 중복 클릭 방지: 확인 중이거나 형식이 틀리면 요청하지 않는다
+    if (emailState.status === emailStatus.CHECKING || !emailValid()) return;
+    var email = emailValue(), token = ++emailState.token;
+    emailState.status = emailStatus.CHECKING; emailState.failed = false;
+    renderEmail(); updateSubmit();
+    config.checkEmail(email).then(function (result) {
+      if (token !== emailState.token) return;      // 확인하는 사이 이메일을 고쳤으면 결과 무시
+      emailState.status = emailStatus[String(result).toUpperCase()] || emailStatus.AVAILABLE;
+      emailState.checked = email;
+      renderEmail(); updateSubmit();
+    }, function () {
+      if (token !== emailState.token) return;
+      emailState.status = emailStatus.IDLE; emailState.failed = true;
+      renderEmail(); updateSubmit();
+    });
+  });
 
   /* ---------- 주소 ---------- */
   var zip = $('siZip'), addrBtn = $('siAddrSearch'), addrExtra = $('siAddrExtra'),
@@ -1253,7 +1359,7 @@ form.addEventListener("submit", (e) => {
     return state.idChecked && state.checkedId === idInput.value &&
       pwValid(pw.value) && pw.value === pw2.value &&
       !!$('siName').value && !!$('siPhone').value &&
-      emailValid();
+      emailOk();
     // 자택주소는 선택 항목이라 비워도 넘어갈 수 있음
   }
   function updateSubmit() { $('siSubmit').disabled = !isComplete(); }
@@ -1308,6 +1414,7 @@ form.addEventListener("submit", (e) => {
   };
 
   validatePw();
+  renderEmail();
   loadVerified();
 })();
 
