@@ -409,6 +409,90 @@ fieldset { margin: 0; padding: 0; border: 0; min-width: 0; border-top: 1px solid
 .cs .badge { flex: none; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 1px 8px; }
 .cs .badge.y { background: var(--pos-l); color: var(--pos); }
 .cs .badge.n { background: #fff; color: var(--ink3); }
+
+/* ===== 토스 스타일 레이아웃 (색은 gs-shop 토큰 그대로) =====
+   - 큰 왼쪽 정렬 제목 한 줄 + 아래 작은 설명, 제목은 단색
+   - 밑줄형 입력창, 하단 고정 56px 큰 버튼(모서리 16px), 보조 버튼은 회색 면
+   - 약관 동의는 바텀시트 + 체크 표시만 쓰는 목록 + "동의 안 함" 텍스트 버튼 */
+.ev .intro h2 em, #v-info .si-title em, .cs .head h1 em { color: inherit; }
+.ev .app-bar h1, #v-info .si-header-title, .cs .top b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.ev .intro { padding: 28px 24px 24px; }
+.ev .intro h2 { font-size: 28px; line-height: 1.3; letter-spacing: -0.03em; }
+.ev .intro p { margin-top: 12px; font-size: 15px; }
+.ev .bar { margin: 0 24px; }
+.ev .btn, .ev .btn-primary { height: 56px; border-radius: 16px; font-size: 17px; }
+.ev .btn-outline { border: 0; background: #F5F6FA; color: #424252; }
+.ev .btn-primary { background: #0A61EB; }
+.ev .btn-primary:disabled { background: #EAECF5; color: #72728A; }
+#v-entry .content { flex: 0 0 auto; margin-top: auto; padding: 0 24px 8px; }
+#v-entry .caption { margin: 0 0 4px; }
+.ev .proto { padding: 0 24px 24px; }
+/* 본인 인증: 구분선 없는 큰 목록, 선택 행만 면으로 강조 */
+#v-verification .content { padding: 0 24px 24px; }
+.ev fieldset { border-top: 0; }
+.ev .row { min-height: 76px; margin: 0 -16px; padding: 0 16px; border-bottom: 0; border-radius: 16px; transition: background .2s ease-in-out; }
+.ev .row:hover { background: #F9FAFC; }
+.ev .row:has(input:checked) { background: #ECF4FE; }
+.ev .txt b { font-size: 17px; }
+.ev .txt small { font-size: 14px; }
+.ev .row:has(input:focus-visible) { outline-offset: -3px; }
+
+/* 정보입력: 밑줄형 입력창 */
+#v-info .si-main { padding: 24px 24px 120px; }
+#v-info .si-steps { padding: 8px 24px 0; }
+#v-info .si-step-label { padding: 8px 24px 0; }
+#v-info .si-title { font-size: 28px; letter-spacing: -0.03em; }
+#v-info .si-desc { margin-bottom: 32px; }
+#v-info .si-field { margin-bottom: 28px; }
+#v-info .si-label { margin-bottom: 0; font-size: 13px; font-weight: 500; color: #72728A; }
+#v-info .si-input, #v-info .si-select { height: 52px; padding: 0; font-size: 18px; background-color: transparent; border: 0; border-bottom: 1px solid #D2D4E5; border-radius: 0; }
+#v-info .si-input:focus, #v-info .si-select:focus { background-color: transparent; border-bottom: 2px solid #0F78FF; padding-bottom: 0; }
+#v-info .si-input[readonly] { background-color: transparent; color: #72728A; }
+#v-info .si-input.has-end { padding-right: 48px; }
+#v-info .si-select { padding-right: 28px; background-position: right 0 center; }
+#v-info .si-textarea { padding: 12px 0; }
+#v-info .si-btn-outline { height: 40px; padding: 0 14px; border: 0; border-radius: 12px; background: #F5F6FA; color: #424252; }
+#v-info .si-btn-primary { height: 56px; border-radius: 16px; font-size: 17px; }
+#v-info .si-bottom { padding: 12px 24px calc(16px + env(safe-area-inset-bottom)); }
+#v-info .si-end-btn { right: -8px; }
+
+/* 약관 동의: 바텀시트 */
+#v-consent.cs { position: fixed; inset: 0; z-index: 100; background: transparent; }
+#v-consent .dim { position: absolute; inset: 0; background: rgba(25,25,35,.5); animation: dimIn .3s linear; }
+#v-consent .sheet { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; padding: 32px 24px calc(16px + env(safe-area-inset-bottom)); background: #fff; border-radius: 24px 24px 0 0; animation: sheetUp .4s cubic-bezier(.23,1,.5,1); }
+@keyframes sheetUp { from { transform: translate(-50%, 100%); } to { transform: translate(-50%, 0); } }
+@keyframes dimIn { from { opacity: 0; } to { opacity: 1; } }
+#v-consent h2 { margin-bottom: 20px; font-size: 22px; font-weight: 700; line-height: 1.35; letter-spacing: -0.03em; }
+#v-consent .all { margin: 0 0 4px; padding: 0; background: none; }
+#v-consent .all .rw { min-height: 56px; font-size: 17px; }
+#v-consent .list { padding: 0; }
+#v-consent .acc { margin: 0; border-top: 0; }
+#v-consent .acc:first-of-type { margin-top: 0; }
+#v-consent .sum { margin: 0 0 0 34px; padding-top: 4px; border-top: 0; }
+#v-consent .note { margin: 12px 0 20px; }
+#v-consent .rw { min-height: 48px; }
+/* 체크 표시만 사용 (토스): 회색 → 선택하면 파랑 */
+.cs .ck { width: 22px; height: 22px; border: 0; background: none; border-radius: 0; }
+.cs .ck::after { opacity: 1; width: 6px; height: 12px; margin-top: -3px; border-color: #BABAD4; border-width: 0 2.5px 2.5px 0; transition: border-color .2s linear; }
+.cs .on > .ck, .cs .ck.on, .cs .rw.on .ck { background: none; border-color: transparent; }
+.cs .on > .ck::after, .cs .ck.on::after, .cs .rw.on .ck::after { border-color: #0F78FF; }
+.cs .rq { color: #0F78FF; }
+.cs .btn { height: 56px; border-radius: 16px; font-size: 17px; background: #0A61EB; }
+.cs .btn:disabled { background: #EAECF5; color: #72728A; }
+.cs .btn-text { display: block; width: 100%; height: 48px; margin-top: 4px; text-align: center; color: #72728A; font-size: 15px; font-weight: 500; }
+
+/* 가입 완료: 박스 없이 구분선만 */
+#v-done .hero { padding-top: 96px; text-align: left; }
+#v-done .hero .ok { margin: 0 0 24px; }
+#v-done .hero h1 { font-size: 28px; letter-spacing: -0.03em; }
+#v-done .hero, #v-done .card, #v-done .note { margin-left: 4px; margin-right: 4px; }
+#v-done .hero { padding-left: 20px; padding-right: 20px; }
+#v-done .card { margin-top: 32px; border-radius: 0; background: none; border-top: 8px solid #F5F6FA; margin-left: 0; margin-right: 0; }
+#v-done .card .ch { padding: 24px 24px 8px; }
+#v-done .li, #v-done .info > div:not(.ch) { padding-left: 24px; padding-right: 24px; }
+#v-done .cta { padding: 12px 24px calc(16px + env(safe-area-inset-bottom)); }
+#v-done .page { padding-bottom: 160px; }
+#v-done .btn.ghost { border: 0; background: #F5F6FA; color: #424252; }
 </style>
 </head>
 <body>
@@ -635,41 +719,33 @@ fieldset { margin: 0; padding: 0; border: 0; min-width: 0; border-top: 1px solid
 
 </div>
 
-<!-- 4. 약관 동의 -->
+<!-- 4. 약관 동의 (바텀시트) -->
 <div class="cs" id="v-consent" data-screen="consent" hidden>
-<div class="page">
-  <header class="top"><button type="button" class="back" data-back aria-label="이전 단계">‹</button><b>회원가입</b><span class="stp">4/4</span></header>
-  <div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="4" aria-label="약관 동의, 4 / 4 단계"><i style="width:100%"></i></div>
-  <section class="head">
-    <h1><em>약관에 동의</em>해 주세요</h1>
-    <p>필수 항목만 동의해도 가입할 수 있어요.</p>
-  </section>
-
-  <div class="all"><button type="button" class="rw" id="allBtn" role="checkbox" aria-checked="false"><span class="ck"></span><span>전체 동의<small>선택 항목(통합 서비스·마케팅)까지 모두 동의해요</small></span></button></div>
-
-  <ul class="list" id="reqList"></ul>
-
-  <div class="acc">
-    <div class="ah">
-      <button type="button" class="rw" id="svcAll" role="checkbox" aria-checked="false"><span class="ck"></span><span><i class="op">(선택)</i> 통합 ID 서비스 이용<small id="svcSub"></small></span></button>
-      <button type="button" class="tg" data-acc="svcList" aria-expanded="false" aria-label="서비스 목록 펼치기"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="dim" data-back></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle">서비스 이용에<br>꼭 필요한 동의만 추렸어요</h2>
+    <div class="all"><button type="button" class="rw" id="allBtn" role="checkbox" aria-checked="false"><span class="ck"></span><span>전체 동의<small>선택 항목(통합 서비스·마케팅)까지 모두 동의해요</small></span></button></div>
+    <ul class="list" id="reqList"></ul>
+    <div class="acc">
+      <div class="ah">
+        <button type="button" class="rw" id="svcAll" role="checkbox" aria-checked="false"><span class="ck"></span><span><i class="op">선택</i> 통합 ID 서비스 이용<small id="svcSub"></small></span></button>
+        <button type="button" class="tg" data-acc="svcList" aria-expanded="false" aria-label="서비스 목록 펼치기"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
+      <ul class="ab" id="svcList" hidden></ul>
     </div>
-    <ul class="ab" id="svcList" hidden></ul>
-  </div>
-
-  <div class="acc">
-    <div class="ah">
-      <button type="button" class="rw" id="mkAll" role="checkbox" aria-checked="false"><span class="ck"></span><span><i class="op">(선택)</i> 마케팅 수신 동의<small>포인트 · 면세점</small></span></button>
-      <button type="button" class="tg" data-acc="mkBody" aria-expanded="false" aria-label="수신 방법 펼치기"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="acc">
+      <div class="ah">
+        <button type="button" class="rw" id="mkAll" role="checkbox" aria-checked="false"><span class="ck"></span><span><i class="op">선택</i> 마케팅 수신 동의<small>포인트 · 면세점</small></span></button>
+        <button type="button" class="tg" data-acc="mkBody" aria-expanded="false" aria-label="수신 방법 펼치기"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
+      <p class="perk">면세점 마케팅 동의 시 GOLD 등급(최대 15% 할인) 즉시 적용 · 유지 1년</p>
+      <div id="mkBody" hidden><div class="mx" id="matrix"></div></div>
     </div>
-    <p class="perk">면세점 마케팅 동의 시 GOLD 등급(최대 15% 할인) 즉시 적용 · 유지 1년</p>
-    <div id="mkBody" hidden><div class="mx" id="matrix"></div></div>
+    <div class="sum" id="mkSum" hidden></div>
+    <p class="note">광고성 정보 수신을 거부해도 주문·배송·약관 변경 등 고객 안내는 발송돼요.</p>
+    <button class="btn" id="submit" type="button">동의하고 가입하기</button>
+    <button class="btn-text" type="button" data-back>동의 안 함</button>
   </div>
-  <div class="sum" id="mkSum" hidden></div>
-  <p class="note">광고성 정보 수신을 거부해도 주문·배송·약관 변경 등 고객 안내는 발송돼요.</p>
-
-  <div class="cta"><button class="btn" id="submit" type="button">동의하고 가입하기</button></div>
-</div>
 </div>
 
 <!-- 5. 가입 완료 -->
@@ -704,7 +780,11 @@ fieldset { margin: 0; padding: 0; border: 0; min-width: 0; border-top: 1px solid
 
 // ===== 화면 전환 (history 기반: 각 화면의 뒤로가기 = history.back) =====
 const SCREENS=["entry","verification","info","consent","done"];
-function show(n){SCREENS.forEach(s=>{document.getElementById("v-"+s).hidden=s!==n});scrollTo(0,0)}
+function show(n){
+  SCREENS.forEach(s=>{document.getElementById("v-"+s).hidden=!(s===n||(n==="consent"&&s==="info"))});
+  document.body.style.overflow=n==="consent"?"hidden":"";
+  if(n!=="consent")scrollTo(0,0);
+}
 function go(n){history.pushState({s:n},"");show(n)}
 history.replaceState({s:"entry"},"");
 addEventListener("popstate",e=>show((e.state&&e.state.s)||"entry"));
@@ -1175,7 +1255,7 @@ const names=o=>({y:CH.filter(c=>o[c]),n:CH.filter(c=>!o[c])});
 const badge=y=>y?'<span class="badge y">동의</span>':'<span class="badge n">미동의</span>';
 
 function render(){
-  $("#reqList").innerHTML=REQ.map(([k,t])=>`<li>${rw(`data-req="${k}"`,state.req[k],`<i class="rq">(필수)</i> ${t}`)}<a class="vw" data-view role="button" tabindex="0">보기</a></li>`).join("");
+  $("#reqList").innerHTML=REQ.map(([k,t])=>`<li>${rw(`data-req="${k}"`,state.req[k],`<i class="rq">필수</i> ${t}`)}<a class="vw" data-view role="button" tabindex="0">보기</a></li>`).join("");
   const set=(id,on)=>{const e=$(id);e.classList.toggle("on",on);e.setAttribute("aria-checked",on)};
   set("#allBtn",reqAll()&&svcAll()&&mkAll()); set("#svcAll",svcAll()); set("#mkAll",mkAll());
   $("#svcSub").textContent=`${vals(state.svc).filter(Boolean).length}/9`;
