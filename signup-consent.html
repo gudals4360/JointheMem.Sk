@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>회원가입 동의 | 신세계포인트 × 신세계면세점</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+/* 토큰: gs-shop design.md (primary=계정·인증 파랑, content/bg/border 스케일, 4px spacing, radius m/l/xl) */
+:root{
+  --primary:#0F78FF; --primary-dark:#0A61EB; --primary-light:#ECF4FE;
+  --info-light:#E6F2FF;
+  --negative:#C00002; --negative-light:#FCF3F4;
+  --positive:#12891D; --positive-light:#E8F7E9;
+  --c1:#191923; --c2:#424252; --c3:#72728A; --c4:#9595B2; --cdis:#BABAD4;
+  --bg:#FFFFFF; --bg2:#F9FAFC; --bg3:#F5F6FA;
+  --line:#D2D4E5; --line2:#EAECF5;
+  --r-m:8px; --r-l:12px; --r-xl:16px;
+  --ease:cubic-bezier(.68,0,.28,1);
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:"Pretendard",-apple-system,"Malgun Gothic",sans-serif;color:var(--c1);background:var(--bg3);font-size:14px;line-height:1.5;letter-spacing:-.01em}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.app{max-width:480px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:104px}
+header{display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 16px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--bg);z-index:5}
+header b{font-size:16px;font-weight:700}
+.steps{display:flex;gap:6px;padding:16px 16px 0}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line2)}
+.steps i.on{background:var(--primary)}
+h1{font-size:22px;line-height:1.25;font-weight:700;padding:16px 16px 4px}
+.sub{padding:0 16px 16px;color:var(--c3);font-size:13px}
+section{padding:0 16px;margin-top:20px}
+
+/* 전체 동의 */
+.all{display:flex;align-items:center;gap:12px;width:100%;padding:16px;border-radius:var(--r-xl);background:var(--primary-light);border:1.5px solid var(--primary);text-align:left}
+.all strong{font-size:16px;font-weight:700}
+.all small{display:block;color:var(--c3);font-size:12px}
+
+/* 체크박스 */
+.ck{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--cdis);background:#fff;display:grid;place-items:center;transition:all .2s linear}
+.ck svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:3;opacity:0}
+.on>.ck,.ck.on{background:var(--primary);border-color:var(--primary)}
+.on>.ck svg,.ck.on svg{opacity:1}
+
+/* 그룹 헤더 */
+.gh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.gh h2{font-size:16px;font-weight:700}
+.gh .cnt{margin-left:auto;font-size:12px;color:var(--c3)}
+.tag{display:inline-block;font-size:11px;font-weight:600;border-radius:4px;padding:1px 6px;line-height:1.5}
+.tag.req{background:var(--primary);color:#fff}
+.tag.opt{background:var(--bg3);color:var(--c3);border:1px solid var(--line)}
+
+/* 필수: 파랑 좌측 바 + 연한 파랑 면 */
+.req-box{border:1px solid var(--primary);border-left-width:4px;border-radius:var(--r-l);background:var(--bg);overflow:hidden}
+.req-box .row{border-bottom:1px solid var(--info-light)}
+.req-box .row:last-child{border-bottom:0}
+/* 선택: 회색 면, 얇은 보더 */
+.opt-box{border:1px solid var(--line2);border-radius:var(--r-l);background:var(--bg2);overflow:hidden}
+.opt-box>.row,.opt-box>.blk{border-bottom:1px solid var(--line2)}
+.opt-box>:last-child{border-bottom:0}
+
+.row{display:flex;align-items:center;gap:12px;padding:14px 12px;width:100%;text-align:left}
+.row .t{flex:1;font-size:14px}
+.row .t small{display:block;color:var(--c3);font-size:12px}
+.view{color:var(--c4);font-size:12px;text-decoration:underline;padding:4px}
+.req-box .row.on{background:var(--primary-light)}
+
+/* 스위치 (우측에서 바로 동의) */
+.sw{flex:none;width:44px;height:26px;border-radius:13px;background:var(--cdis);position:relative;transition:background .2s linear}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .25s var(--ease)}
+.sw.on{background:var(--primary)}
+.sw.on::after{transform:translateX(18px)}
+
+/* 통합 ID 서비스 */
+.svc-head{display:flex;align-items:center;gap:12px;padding:14px 12px}
+.svc-head .t{flex:1}
+.svc-head .t b{font-weight:600}
+.svc-head .t small{display:block;color:var(--c3);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px}
+.chip{font-size:12px;border-radius:999px;padding:3px 10px;background:#fff;border:1px solid var(--line);color:var(--c3)}
+.chip.on{background:var(--primary-light);border-color:var(--primary);color:var(--primary-dark);font-weight:600}
+.toggle-more{display:block;width:100%;padding:10px;color:var(--c3);font-size:13px;border-top:1px solid var(--line2);background:#fff}
+/* 기존 통합 ID 화면의 브랜드 컬러 바 유지, 높이는 축소 + 우측 스위치 */
+.brands{display:grid;gap:6px;padding:0 12px 12px}
+.brand{display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border-radius:var(--r-m);background:var(--bc);color:#fff;font-weight:600;font-size:14px}
+.brand .lg{flex:none;width:76px;font-size:11px;font-weight:700;opacity:.85;letter-spacing:-.02em;white-space:nowrap;overflow:hidden}
+.brand .nm{flex:1}
+.bck{display:flex;padding:4px}
+.brand .ck{background:transparent;border-color:rgba(255,255,255,.8)}
+.brand .on>.ck{background:#fff;border-color:#fff}
+.brand .on>.ck svg{stroke:var(--bc)}
+
+/* 마케팅: 한 곳에서 표로 */
+.mk-head{display:flex;align-items:center;gap:12px;padding:14px 12px}
+.mk-head .t{flex:1;font-weight:600}
+.mk-head .t small{display:block;font-weight:400;color:var(--c3);font-size:12px}
+.reward{margin:0 12px 12px;padding:8px 12px;border-radius:var(--r-m);background:#FFF5ED;color:#F95401;font-size:12px;font-weight:600}
+.matrix{background:#fff;border-top:1px solid var(--line2)}
+.matrix .mr{display:grid;grid-template-columns:1fr 84px 84px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line2)}
+.matrix .mr:last-child{border-bottom:0}
+.matrix .mr.h{background:var(--bg3);font-size:12px;color:var(--c3);font-weight:600;padding:8px 12px}
+.matrix .mr.h span:not(:first-child){text-align:center}
+.matrix .cell{display:flex;justify-content:center}
+.summary{padding:12px;background:#fff;border-top:1px solid var(--line2);font-size:13px}
+.summary div{display:flex;gap:8px;align-items:baseline;padding:2px 0}
+.badge{flex:none;font-size:11px;font-weight:600;border-radius:4px;padding:1px 8px}
+.badge.y{background:var(--positive-light);color:var(--positive)}
+.badge.n{background:var(--bg3);color:var(--c3)}
+.note{margin:8px 4px 0;font-size:12px;color:var(--c3)}
+
+/* 하단 고정 CTA */
+.cta{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;padding:12px 16px 20px;background:var(--bg);border-top:1px solid var(--line2);z-index:6}
+.btn{display:block;width:100%;height:48px;border-radius:var(--r-m);background:var(--primary);color:#fff;font-weight:600;font-size:16px;letter-spacing:-.025em;transition:background .2s ease-in-out}
+.btn:disabled{background:var(--line2);color:var(--c4);cursor:not-allowed}
+.btn.outline{background:transparent;border:1px solid var(--line);color:var(--c1);margin-top:8px}
+.msg{text-align:center;font-size:12px;color:var(--negative);margin-bottom:8px;min-height:18px}
+
+/* 완료 화면 */
+#done{display:none}
+.hero{padding:32px 16px 8px;text-align:center}
+.hero .ok{width:56px;height:56px;border-radius:50%;background:var(--primary);display:grid;place-items:center;margin:0 auto 16px}
+.hero .ok svg{width:28px;height:28px;stroke:#fff;fill:none;stroke-width:3}
+.hero h1{padding:0}
+.card{border:1px solid var(--line2);border-radius:var(--r-xl);overflow:hidden}
+.card .ch{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg2);font-weight:700}
+.card .ch small{font-weight:400;color:var(--c3);font-size:12px}
+.li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line2)}
+.li span:first-child{flex:1}
+.li small{display:block;color:var(--c3);font-size:12px}
+.info div{display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--line2)}
+.info div span:first-child{color:var(--c3)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ========== 1. 동의 화면 ========== -->
+<div id="consent">
+  <header><button aria-label="뒤로">‹</button><b>회원가입</b><span style="width:24px"></span></header>
+  <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+  <h1>약관 동의 한 번으로<br>통합 ID 가입을 끝내요</h1>
+  <p class="sub">필수 항목만 동의해도 가입할 수 있어요. 선택 항목은 나중에 마이페이지에서 바꿀 수 있어요.</p>
+
+  <section style="margin-top:0">
+    <button class="all" id="allBtn" type="button">
+      <span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>
+      <span><strong>전체 동의하기</strong><small>필수 + 선택(통합 서비스·마케팅 포함) 모두 동의</small></span>
+    </button>
+  </section>
+
+  <!-- 필수 -->
+  <section>
+    <div class="gh"><span class="tag req">필수</span><h2>가입에 꼭 필요해요</h2><span class="cnt" id="reqCnt"></span></div>
+    <div class="req-box" id="reqBox"></div>
+  </section>
+
+  <!-- 선택: 통합 ID 서비스 -->
+  <section>
+    <div class="gh"><span class="tag opt">선택</span><h2>통합 ID로 이용할 서비스</h2></div>
+    <div class="opt-box">
+      <div class="svc-head">
+        <div class="t"><b>9개 서비스 한 번에 이용</b><small id="svcSub"></small></div>
+        <button class="bck" id="svcAll" role="checkbox" aria-label="통합 서비스 전체 이용"><span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+      </div>
+      <div class="brands" id="svcList"></div>
+    </div>
+  </section>
+
+  <!-- 선택: 마케팅 (한 번만) -->
+  <section>
+    <div class="gh"><span class="tag opt">선택</span><h2>마케팅 수신 동의</h2></div>
+    <div class="opt-box">
+      <div class="mk-head">
+        <div class="t">전체 수신 동의<small>신세계포인트 · 이마트 · 백화점 · 면세점</small></div>
+        <button class="bck" id="mkAll" role="checkbox" aria-label="마케팅 전체 동의"><span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
+      </div>
+      <div class="reward" id="reward">면세점 마케팅 동의 시 GOLD 등급(최대 15% 할인) 즉시 적용 · 유지 1년</div>
+      <div class="matrix" id="matrix"></div>
+      <div class="summary" id="mkSum"></div>
+    </div>
+    <p class="note">광고성 정보 수신을 거부해도 주문·배송·약관 변경 등 고객 안내는 발송돼요.</p>
+  </section>
+
+  <div class="cta">
+    <div class="msg" id="msg"></div>
+    <button class="btn" id="submit" type="button">동의하고 가입하기</button>
+  </div>
+</div>
+
+<!-- ========== 2. 완료 화면 (팝업 2번 → 결과 한 번) ========== -->
+<div id="done">
+  <header><span style="width:24px"></span><b>가입 완료</b><span style="width:24px"></span></header>
+  <div class="hero">
+    <div class="ok"><svg viewBox="0 0 28 28"><path d="M6 14.5l5.5 5L22 8.5"/></svg></div>
+    <h1>김*민 님,<br>통합 ID 가입이 완료됐어요</h1>
+    <p class="sub">동의 내용은 아래 한 곳에서 확인하고 바꿀 수 있어요.</p>
+  </div>
+  <section>
+    <div class="card">
+      <div class="ch">동의 현황 <small id="doneDate"></small></div>
+      <div id="doneList"></div>
+    </div>
+  </section>
+  <section>
+    <div class="card info">
+      <div class="ch">회원정보</div>
+      <div><span>휴대폰</span><span>010-50**-43**</span></div>
+      <div><span>이메일</span><span>gu********@naver.com</span></div>
+      <div><span>주소</span><span>경기 하남시 덕산로, *****</span></div>
+    </div>
+    <p class="note">본인인증으로 확인된 정보로 자동 업데이트돼요.</p>
+  </section>
+  <div class="cta">
+    <button class="btn" type="button">쇼핑 시작하기</button>
+    <button class="btn outline" id="edit" type="button">동의 내용 수정</button>
+  </div>
+</div>
+
+</div>
+<script>
+const CHECK='<span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>';
+const $=s=>document.querySelector(s);
+const state={
+  req:{terms:false,privacy:false,age:false},
+  svc:Object.fromEntries(["이마트","신세계백화점","신백멤버스","신세계아울렛","시코르","이마트에브리데이","신세계까사","스타필드","이마트24"].map(n=>[n,false])),
+  mk:{point:{이메일:false,문자:false,우편:false,전화:false},duty:{이메일:false,문자:false,우편:false,전화:false},night:false}
+};
+const REQ=[["terms","[필수] 서비스 이용약관"],["privacy","[필수] 개인정보 수집·이용 동의"],["age","[필수] 만 14세 이상입니다"]];
+const BRAND={"이마트":["#FFB81C","emart"],"신세계백화점":["#A0A0A0","SHINSEGAE"],"신백멤버스":["#000","신백멤버스"],"신세계아울렛":["#A5005A","OUTLETS"],"시코르":["#000","CHICOR"],"이마트에브리데이":["#4D5058","everyday"],"신세계까사":["#000","CASA"],"스타필드":["#C30F2E","Starfield"],"이마트24":["#4D5058","emart24"]};
+const CH=["이메일","문자","우편","전화"];
+const vals=o=>Object.values(o);
+const mkAllOn=()=>CH.every(c=>state.mk.point[c]&&state.mk.duty[c]);
+const svcAllOn=()=>vals(state.svc).every(Boolean);
+const reqAllOn=()=>vals(state.req).every(Boolean);
+
+function render(){
+  // 필수
+  $("#reqBox").innerHTML=REQ.map(([k,t])=>`<div class="row ${state.req[k]?'on':''}" data-req="${k}" role="checkbox" tabindex="0">${CHECK}<span class="t">${t}</span><span class="view">보기</span></div>`).join("");
+  const rc=vals(state.req).filter(Boolean).length;
+  $("#reqCnt").textContent=`${rc}/3`;
+  // 전체
+  const everything=reqAllOn()&&svcAllOn()&&mkAllOn()&&state.mk.night;
+  $("#allBtn").classList.toggle("on",everything);
+  // 서비스
+  const sc=vals(state.svc).filter(Boolean).length;
+  $("#svcSub").textContent=`${sc}/9 선택됨`;
+  $("#svcAll").classList.toggle("on",svcAllOn());$("#svcAll").setAttribute("aria-checked",svcAllOn());
+  $("#svcList").innerHTML=Object.entries(state.svc).map(([n,v])=>`<div class="brand" style="--bc:${BRAND[n][0]}"><span class="lg">${BRAND[n][1]}</span><span class="nm">${n}</span><button class="bck ${v?'on':''}" data-svc="${n}" role="checkbox" aria-checked="${v}" aria-label="${n}">${CHECK}</button></div>`).join("");
+  // 마케팅 매트릭스
+  $("#mkAll").classList.toggle("on",mkAllOn());
+  $("#matrix").innerHTML=`<div class="mr h"><span>수신 방법</span><span>신세계포인트</span><span>신세계면세점</span></div>`+
+    CH.map(c=>`<div class="mr"><span>${c}</span><span class="cell"><button class="bck ${state.mk.point[c]?'on':''}" data-mk="point:${c}" role="checkbox" aria-label="신세계포인트 ${c}">${CHECK}</button></span><span class="cell"><button class="bck ${state.mk.duty[c]?'on':''}" data-mk="duty:${c}" role="checkbox" aria-label="신세계면세점 ${c}">${CHECK}</button></span></div>`).join("")+
+    `<div class="mr"><span>야간(21~08시) 수신<br><small style="color:var(--c3);font-size:12px">면세점 한정</small></span><span></span><span class="cell"><button class="bck ${state.mk.night?'on':''}" data-night role="checkbox" aria-label="야간 수신">${CHECK}</button></span></div>`;
+  $("#mkSum").innerHTML=summaryRows();
+  // CTA
+  const left=3-rc;
+  $("#submit").disabled=left>0;
+  $("#submit").textContent=left>0?`필수 동의 ${left}개 남았어요`:"동의하고 가입하기";
+  $("#msg").textContent="";
+}
+function names(o){const y=CH.filter(c=>o[c]);return{y,n:CH.filter(c=>!o[c])}}
+function badge(y){return y?'<span class="badge y">동의</span>':'<span class="badge n">미동의</span>'}
+function summaryRows(){
+  return [["신세계포인트",state.mk.point],["신세계면세점",state.mk.duty]].map(([l,o])=>{
+    const {y,n}=names(o);
+    return `<div><b style="width:84px;flex:none">${l}</b><span>${y.length?badge(1)+" "+y.join("·"):""} ${n.length?badge(0)+" "+n.join("·"):""}</span></div>`;
+  }).join("");
+}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-req],[data-svc],[data-mk],[data-night],#allBtn,#svcAll,#mkAll,.view");
+  if(!t)return;
+  if(t.classList.contains("view")){e.stopPropagation();alert("약관 전문 보기(프로토타입)");return}
+  if(t.dataset.req)state.req[t.dataset.req]=!state.req[t.dataset.req];
+  else if(t.dataset.svc)state.svc[t.dataset.svc]=!state.svc[t.dataset.svc];
+  else if(t.dataset.mk){const[g,c]=t.dataset.mk.split(":");state.mk[g][c]=!state.mk[g][c]}
+  else if(t.hasAttribute("data-night"))state.mk.night=!state.mk.night;
+  else if(t.id==="allBtn"){const v=!(reqAllOn()&&svcAllOn()&&mkAllOn()&&state.mk.night);
+    Object.keys(state.req).forEach(k=>state.req[k]=v);Object.keys(state.svc).forEach(k=>state.svc[k]=v);
+    CH.forEach(c=>{state.mk.point[c]=v;state.mk.duty[c]=v});state.mk.night=v}
+  else if(t.id==="svcAll"){const v=!svcAllOn();Object.keys(state.svc).forEach(k=>state.svc[k]=v)}
+  else if(t.id==="mkAll"){const v=!mkAllOn();CH.forEach(c=>{state.mk.point[c]=v;state.mk.duty[c]=v});state.mk.night=v}
+  render();
+});
+
+$("#submit").addEventListener("click",()=>{
+  const d=new Date();$("#doneDate").textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+  const sc=vals(state.svc).filter(Boolean).length;
+  const p=names(state.mk.point),f=names(state.mk.duty);
+  const item=(label,sub,y)=>`<div class="li"><span>${label}${sub?`<small>${sub}</small>`:""}</span>${badge(y)}</div>`;
+  $("#doneList").innerHTML=
+    item("필수 약관 3건","이용약관 · 개인정보 · 만 14세",true)+
+    item("통합 ID 서비스",`${sc}/9 이용`,sc>0)+
+    item("신세계포인트 마케팅",p.y.length?`동의 ${p.y.join("·")}`+(p.n.length?` / 미동의 ${p.n.join("·")}`:""):"전체 미동의",p.y.length>0)+
+    item("신세계면세점 마케팅",f.y.length?`동의 ${f.y.join("·")}`+(f.n.length?` / 미동의 ${f.n.join("·")}`:""):"전체 미동의",f.y.length>0)+
+    item("야간 마케팅","21~08시",state.mk.night);
+  $("#consent").style.display="none";$("#done").style.display="block";scrollTo(0,0);
+});
+$("#edit").addEventListener("click",()=>{$("#done").style.display="none";$("#consent").style.display="block";scrollTo(0,0)});
+render();
+</script>
+</body>
+</html>
