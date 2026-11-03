@@ -264,7 +264,7 @@
         <!-- 기존 2줄 placeholder 문구를 입력창 밖으로 -->
         <ul class="si-rules" id="siPwRules">
           <li data-rule="length">8자 이상</li>
-          <li data-rule="lower">소문자</li>
+          <li data-rule="case">대소문자</li>
           <li data-rule="digit">숫자</li>
           <li data-rule="special">특수문자</li>
         </ul>
@@ -504,7 +504,7 @@
   // 비밀번호 규칙: 칠 때마다 항목별로 체크 표시
   var PW_RULES = {
     length:  function (v) { return v.length >= 8 && v.length <= 20; },
-    lower:   function (v) { return /[a-z]/.test(v); },
+    case:    function (v) { return /[a-z]/.test(v) && /[A-Z]/.test(v); }, // 대문자·소문자 모두 포함
     digit:   function (v) { return /[0-9]/.test(v); },
     special: function (v) { return /[^A-Za-z0-9\s]/.test(v); }
   };
