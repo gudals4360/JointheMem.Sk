@@ -237,6 +237,20 @@
 
     <form id="siForm" novalidate autocomplete="on">
 
+      <!-- 아이디 -->
+      <div class="si-field" data-field="userId">
+        <label class="si-label" for="siUserId">아이디 <span class="si-req">*</span></label>
+        <div class="si-row">
+          <div class="si-input-wrap">
+            <input class="si-input" id="siUserId" name="userId" type="text" inputmode="latin"
+                   autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20"
+                   placeholder="영문, 숫자 6~20자" />
+          </div>
+          <button type="button" class="si-btn si-btn-outline" id="siIdCheck" disabled>중복확인</button>
+        </div>
+        <p class="si-msg" id="siUserIdMsg" hidden></p>
+      </div>
+
       <!-- 비밀번호 -->
       <div class="si-field" data-field="password">
         <label class="si-label" for="siPw">비밀번호 <span class="si-req">*</span></label>
@@ -360,6 +374,13 @@
 
   /* ===== 다른 화면/서버와 연결할 때 바꾸는 부분 ===== */
   var config = {
+    // 아이디 중복확인. 서버가 생기면 이 함수만 fetch로 바꾸면 된다. true = 사용 가능
+    checkIdAvailable: function (id) {
+      var taken = ['admin', 'shinsegae', 'test1234', 'gudals4360'];
+      return new Promise(function (resolve) {
+        setTimeout(function () { resolve(taken.indexOf(id) === -1); }, 300);
+      });
+    },
     // 다음 단계 주소. 비워두면 이동하지 않고 이벤트만 보낸다.
     nextUrl: '',
     // 본인인증 값이 없을 때 보여줄 예시 (화면 확인용)
@@ -370,6 +391,8 @@
   var form = $('siForm');
 
   var state = {
+    idChecked: false,     // 중복확인 통과한 아이디
+    checkedId: '',
     pwTouched: false,
     pw2Touched: false,
     addrSelected: false
@@ -423,6 +446,55 @@
     $('siPhone').value = formatPhone(v && v.phone);
     updateSubmit();
   }
+
+  /* ---------- 아이디 ---------- */
+  var idInput = $('siUserId'), idBtn = $('siIdCheck'), idMsg = $('siUserIdMsg');
+  function idFormatOk(v) { return /^(?=.*[a-z])[a-z0-9]{6,20}$/.test(v); }
+
+  idInput.addEventListener('input', function () {
+    // 대문자는 소문자로, 영문·숫자 외 문자는 제거
+    var clean = idInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (clean !== idInput.value) idInput.value = clean;
+    if (state.checkedId !== clean) { state.idChecked = false; }
+    idBtn.disabled = !idFormatOk(clean);
+    if (!clean) { setMsg(idMsg); setFieldError('userId', false); }
+    else if (!idFormatOk(clean)) {
+      setMsg(idMsg, 'info', '영문 소문자를 포함해 영문, 숫자 6~20자로 입력해 주세요.');
+      setFieldError('userId', false);
+    } else if (!state.idChecked) {
+      setMsg(idMsg, 'info', '중복확인을 해 주세요.');
+      setFieldError('userId', false);
+    }
+    updateSubmit();
+  });
+  idInput.addEventListener('blur', function () {
+    var v = idInput.value;
+    if (v && !idFormatOk(v)) {
+      setMsg(idMsg, 'error', '영문 소문자를 포함해 영문, 숫자 6~20자로 입력해 주세요.');
+      setFieldError('userId', true);
+    }
+  });
+  idInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); if (!idBtn.disabled) idBtn.click(); }
+  });
+  idBtn.addEventListener('click', function () {
+    var v = idInput.value;
+    if (!idFormatOk(v)) return;
+    idBtn.disabled = true;
+    idBtn.textContent = '확인 중';
+    Promise.resolve(config.checkIdAvailable(v)).then(function (ok) {
+      if (idInput.value !== v) return; // 확인 중에 값이 바뀜
+      state.idChecked = ok; state.checkedId = ok ? v : '';
+      setMsg(idMsg, ok ? 'success' : 'error', ok ? '사용할 수 있는 아이디예요.' : '이미 사용 중인 아이디예요.');
+      setFieldError('userId', !ok);
+      updateSubmit();
+    }).catch(function () {
+      setMsg(idMsg, 'error', '잠시 후 다시 시도해 주세요.');
+    }).then(function () {
+      idBtn.textContent = '중복확인';
+      idBtn.disabled = !idFormatOk(idInput.value);
+    });
+  });
 
   /* ---------- 비밀번호 ---------- */
   var pw = $('siPw'), pw2 = $('siPw2'), pw2Msg = $('siPw2Msg');
@@ -626,7 +698,8 @@
 
   /* ---------- 다음 버튼 ---------- */
   function isComplete() {
-    return pwValid(pw.value) && pw.value === pw2.value &&
+    return state.idChecked && state.checkedId === idInput.value &&
+      pwValid(pw.value) && pw.value === pw2.value &&
       !!$('siName').value && !!$('siPhone').value &&
       emailValid();
     // 자택주소는 선택 항목이라 비워도 넘어갈 수 있음
@@ -635,6 +708,7 @@
 
   function collect() {
     return {
+      userId: idInput.value,
       password: pw.value,
       name: $('siName').value,
       phone: $('siPhone').value,
