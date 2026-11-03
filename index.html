@@ -443,7 +443,23 @@ section{padding:0 16px;margin-top:20px}
 
 }
 .cs { font-family:"Pretendard Variable","Pretendard",-apple-system,"Malgun Gothic",sans-serif; }
-#v-entry .intro { padding-bottom: 120px; }
+.ev .intro h2 em { font-style: normal; color: #0A61EB; }
+/* 가입 혜택 캐러셀 (가입 방식 선택 화면) */
+#v-entry .cr { margin: 0 0 44px; }
+#v-entry .cr-track { position: relative; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 4px 0; }
+#v-entry .cr-track::-webkit-scrollbar { display: none; }
+#v-entry .cr-track::before, #v-entry .cr-track::after { content: ""; flex: 0 0 27.5%; }
+#v-entry .cr-s { flex: 0 0 45%; scroll-snap-align: center; text-align: center; opacity: .35; transform: scale(.82); transition: all .4s cubic-bezier(.23,1,.5,1); }
+#v-entry .cr-s.on { opacity: 1; transform: none; }
+#v-entry .cr-art { display: grid; place-items: center; width: 134px; height: 134px; margin: 0 auto; border-radius: 44px; background: #F5F6FA; }
+#v-entry .cr-art svg { width: 92px; height: 92px; }
+#v-entry .cr-s p { margin-top: 8px; font-size: 14px; color: #191923; }
+#v-entry .cr-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+#v-entry .cr-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: #D2D4E5; transition: background .2s linear; }
+#v-entry .cr-dots button[aria-current="true"] { background: #191923; }
+/* 가입 방식: 캡션은 바로 위 버튼에 붙이고, 다음 요소와는 더 띄워 그룹으로 읽히게 */
+#v-entry .content .caption { margin: 0 0 12px; }
+#v-entry .content .sns + .caption { margin: 0; }
 </style>
 </head>
 <body>
@@ -459,9 +475,17 @@ section{padding:0 16px;margin-top:20px}
   <div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="가입 방식 선택, 1 / 4 단계"><i style="width:25%"></i></div>
 
   <section class="intro">
-    <h2>어떤 방법으로<br>가입하시겠어요?</h2>
+    <h2><em>어떤 방법</em>으로<br>가입하시겠어요?</h2>
     <p>신세계면세점 회원이 되어 쇼핑 혜택을 이용해 보세요.</p>
   </section>
+    <div class="cr" role="region" aria-roledescription="carousel" aria-label="가입 혜택 안내">
+      <div class="cr-track" id="crTrack" tabindex="0">
+        <div class="cr-s" role="group" aria-roledescription="slide"><div class="cr-art"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M24 98L44 44l32 32z" fill="#10AFF7"/><path d="M34 71l19-9 5 5-24 12z" fill="#ECF4FE"/><path d="M27 88l25-12 5 5-34 14z" fill="#ECF4FE" opacity=".7"/><ellipse cx="60" cy="60" rx="22" ry="8" transform="rotate(45 60 60)" fill="#0A61EB"/><path d="M70 36c4-8 12-6 10-16" fill="none" stroke="#FF4B83" stroke-width="3" stroke-linecap="round"/><path d="M84 52c8 0 10-8 18-6" fill="none" stroke="#9253EE" stroke-width="3" stroke-linecap="round"/><circle cx="92" cy="30" r="4" fill="#FFC70E"/><circle cx="56" cy="24" r="3" fill="#9253EE"/><rect x="96" y="66" width="7" height="7" rx="1" fill="#FF4B83" transform="rotate(20 99 69)"/><rect x="40" y="20" width="6" height="6" rx="1" fill="#FFC70E" transform="rotate(30 43 23)"/></svg></div><p>가입하면 웰컴 혜택이 기다려요</p></div>
+        <div class="cr-s" role="group" aria-roledescription="slide"><div class="cr-art"><svg viewBox="0 0 120 120" aria-hidden="true"><g><path d="M62 40h34l4 48H58z" fill="#D90961"/><path d="M62 40h34l1 12H61z" fill="#FF4B83"/><path d="M71 40c0-14 18-14 18 0" fill="none" stroke="#D90961" stroke-width="4" stroke-linecap="round"/><path d="M28 56h44l5 46H23z" fill="#F2A900"/><path d="M28 56h44l1 12H27z" fill="#FFC70E"/><path d="M39 56c0-17 22-17 22 0" fill="none" stroke="#C98A00" stroke-width="4" stroke-linecap="round"/></g><path d="M30 28l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#FFC70E"/><path d="M98 24l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#FFC70E"/></svg></div><p>첫 구매 감사, 더블 혜택</p></div>
+        <div class="cr-s" role="group" aria-roledescription="slide"><div class="cr-art"><svg viewBox="0 0 120 120" aria-hidden="true"><path d="M22 46l22 18 16-30 16 30 22-18-8 46H30z" fill="#FFC70E"/><path d="M30 92h60l2-12H28z" fill="#F2A900"/><circle cx="22" cy="44" r="6" fill="#FFE27A"/><circle cx="60" cy="30" r="6" fill="#FFE27A"/><circle cx="98" cy="44" r="6" fill="#FFE27A"/><circle cx="60" cy="72" r="5" fill="#FF4B83"/></svg></div><p>등급이 오를수록 더 큰 혜택</p></div>
+      </div>
+      <div class="cr-dots" id="crDots"><button type="button" aria-label="1번째 안내"></button><button type="button" aria-label="2번째 안내"></button><button type="button" aria-label="3번째 안내"></button></div>
+    </div>
 
   <div class="content">
     <button class="btn btn-primary" type="button" data-go="verification">신세계포인트 통합회원 가입</button>
@@ -1309,6 +1333,30 @@ $("#submit").addEventListener("click",()=>{
 $("#edit").addEventListener("click",()=>{go("consent")});
 render();
 
+})();
+</script>
+<script>
+(function(){
+  const tr=document.getElementById("crTrack"),sl=[...tr.querySelectorAll(".cr-s")],dots=[...document.querySelectorAll("#crDots button")];
+  const entry=document.getElementById("v-entry");
+  let cur=1,timer;
+  const left=i=>sl[i].offsetLeft-(tr.clientWidth-sl[i].offsetWidth)/2;
+  const mark=i=>{cur=i;sl.forEach((e,k)=>e.classList.toggle("on",k===i));dots.forEach((d,k)=>d.setAttribute("aria-current",k===i))};
+  let lock=0;
+  const go=(i,smooth=true)=>{mark(i);lock=Date.now()+(smooth?700:0);tr.scrollTo({left:left(i),behavior:smooth?"smooth":"instant"})};
+  tr.addEventListener("scroll",()=>{
+    if(Date.now()<lock)return;
+    const mid=tr.scrollLeft+tr.clientWidth/2;
+    mark(sl.reduce((b,e,k)=>Math.abs(e.offsetLeft+e.offsetWidth/2-mid)<Math.abs(sl[b].offsetLeft+sl[b].offsetWidth/2-mid)?k:b,0));
+  },{passive:true});
+  dots.forEach((d,k)=>d.addEventListener("click",()=>{stop();go(k)}));
+  tr.addEventListener("keydown",e=>{if(e.key==="ArrowRight"){stop();go(Math.min(cur+1,2))}if(e.key==="ArrowLeft"){stop();go(Math.max(cur-1,0))}});
+  const stop=()=>clearInterval(timer);
+  ["pointerdown","touchstart","wheel"].forEach(ev=>tr.addEventListener(ev,stop,{passive:true}));
+  if(!matchMedia("(prefers-reduced-motion: reduce)").matches)
+    timer=setInterval(()=>{if(!entry.hidden)go((cur+1)%3)},3500);
+  mark(1);go(1,false);
+  new MutationObserver(()=>{if(!entry.hidden)go(cur,false)}).observe(entry,{attributes:true,attributeFilter:["hidden"]});
 })();
 </script>
 </body>
