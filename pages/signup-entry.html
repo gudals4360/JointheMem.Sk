@@ -11,63 +11,31 @@
   <script src="../js/signup-entry.js" defer></script>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
-  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
-</svg>
 <main class="screen">
   <header class="app-bar">
     <a class="icon-btn" href="../index.html" aria-label="이전으로"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></a>
     <h1>회원가입</h1>
-    <a class="icon-btn" href="../index.html" aria-label="홈으로"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9H4z"/></svg></a>
+    <span class="step">1/4</span>
   </header>
-
-  <section class="progress" aria-label="가입 진행 상태">
-    <div class="progress-meta"><strong>가입 방식 선택</strong><span>1 / 4 단계</span></div>
-    <ol class="progress-bar" aria-hidden="true"><li class="done"></li><li></li><li></li><li></li></ol>
-  </section>
+  <div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="가입 방식 선택, 1 / 4 단계"><i style="width:25%"></i></div>
 
   <section class="intro">
-    <h2>어떤 방법으로 가입하시겠어요?</h2>
+    <h2>어떤 방법으로<br>가입하시겠어요?</h2>
     <p>신세계면세점 회원이 되어 쇼핑 혜택을 이용해 보세요.</p>
   </section>
 
   <div class="content">
-    <section class="group" aria-label="회원가입 방식">
-      <a class="card recommended" href="./verification.html">
-        <span class="ico"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 016 0v2"/></svg></span>
-        <span class="title">신세계포인트 통합회원 가입 <em class="badge">추천</em></span>
-        <svg class="chev"><use href="#i-chev"/></svg>
-        <span class="desc">하나의 ID로 신세계면세점과 통합회원 서비스를 이용해요. 본인 인증 후 회원정보를 입력해요.</span>
-      </a>
+    <a class="btn btn-primary" href="./verification.html">신세계포인트 통합회원 가입</a>
+    <p class="caption">하나의 ID로 통합회원 서비스를 이용해요</p>
 
-      <button class="card" type="button" data-method="외국인 회원가입">
-        <span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span>
-        <span class="title">외국인 회원가입 <span class="en">Join as a foreigner</span></span>
-        <svg class="chev"><use href="#i-chev"/></svg>
-        <span class="desc">외국인 고객을 위한 가입 절차로 이동해요.</span>
-      </button>
-    </section>
+    <button class="btn btn-outline" type="button" data-method="외국인 회원가입">외국인 회원가입 · Join as a foreigner</button>
 
-    <section class="group sns" aria-labelledby="sns-title">
-      <h3 id="sns-title">SNS로 간편 가입</h3>
-      <button class="card" type="button" data-method="카카오 간편가입">
-        <span class="ico kakao"><svg viewBox="0 0 24 24"><path d="M12 4C7.6 4 4 6.8 4 10.3c0 2.2 1.4 4.1 3.6 5.2L6.8 19l3.7-2.3c.5.1 1 .1 1.5.1 4.4 0 8-2.8 8-6.5S16.4 4 12 4z" style="fill:#191923;stroke:none"/></svg></span>
-        <span class="title">카카오로 가입</span>
-        <svg class="chev"><use href="#i-chev"/></svg>
-        <span class="desc">카카오 계정으로 빠르게 시작해요.</span>
-      </button>
-      <button class="card" type="button" data-method="앱카드 간편가입">
-        <span class="ico appcard"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg></span>
-        <span class="title">앱카드로 가입</span>
-        <svg class="chev"><use href="#i-chev"/></svg>
-        <span class="desc">보유한 앱카드로 가입해요.</span>
-      </button>
-      <p class="helper"><svg><use href="#i-info"/></svg>가입 방식에 따라 추가 인증이나 정보 입력이 필요할 수 있어요.</p>
-    </section>
-
-    <p class="proto">※ 회원가입 UX 검증용 프로토타입이에요. 실제 가입은 진행되지 않아요.</p>
+    <div class="divider"><span>SNS로 간편 가입</span></div>
+    <button class="btn btn-kakao" type="button" data-method="카카오 간편가입">카카오로 가입</button>
+    <button class="btn btn-outline" type="button" data-method="앱카드 간편가입">앱카드로 가입</button>
+    <p class="caption">가입 방식에 따라 추가 인증이 필요할 수 있어요</p>
   </div>
+  <p class="proto">UX 검증용 프로토타입이에요. 실제 가입은 진행되지 않아요.</p>
 </main>
 </body>
 </html>

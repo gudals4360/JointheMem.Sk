@@ -1,24 +1,17 @@
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-fieldset { display: grid; gap: 12px; margin: 0; padding: 0; border: 0; min-width: 0; }
-.vcard {
-  position: relative; display: grid; grid-template-columns: 44px 1fr 24px; gap: 0 12px; align-items: center;
-  min-height: 72px; padding: 16px; background: var(--bg);
-  border: 1px solid var(--border); border-radius: var(--radius-xl); cursor: pointer;
-  transition: all .2s ease-in-out;
-}
-.vcard:hover { background: var(--bg-2); }
-.vcard input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.vcard .ico { grid-row: span 2; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--bg-3); }
-.vcard .ico svg { width: 22px; height: 22px; fill: none; stroke: var(--text); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.vcard .ico.shinhan { background: var(--primary-light); }
-.vcard .ico.shinhan svg { stroke: var(--primary-dark); }
-.vcard .title { font-size: 16px; font-weight: 600; line-height: 1.25; }
-.vcard .desc { margin-top: 4px; font-size: 13px; color: var(--text-3); grid-column: 2; }
-/* 선택 표시: 색 + 테두리 두께 + 체크 아이콘 (색에만 의존하지 않음) */
-.vcard .check { grid-column: 3; grid-row: 1 / span 2; width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 50%; display: grid; place-items: center; }
-.vcard:has(input:checked) { border: 2px solid var(--primary); background: var(--primary-light); padding: 15px; }
-.vcard:has(input:checked) .check { border-color: var(--primary-dark); background: var(--primary-dark); }
-.vcard:has(input:checked) .check::after { content: ""; width: 6px; height: 11px; margin-top: -2px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
-.vcard:has(input:focus-visible) { outline: 3px solid var(--primary); outline-offset: 2px; }
-.content .helper { margin-bottom: 24px; }
-.proto { margin-top: 16px; font-size: 12px; color: var(--text-3); text-align: center; }
+.content { display: flex; flex-direction: column; }
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; border-top: 1px solid var(--border-2); }
+.row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 72px; border-bottom: 1px solid var(--border-2); cursor: pointer; }
+.row input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.txt { flex: 1; display: grid; gap: 2px; }
+.txt b { font-size: 16px; font-weight: 600; line-height: 1.25; }
+.txt small { font-size: 13px; color: var(--text-3); }
+/* 선택 표시: 색 + 채워진 라디오 + 굵은 제목 */
+.radio { width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 50%; display: grid; place-items: center; transition: all .2s ease-in-out; }
+.row:has(input:checked) .radio { border-color: var(--primary-dark); background: var(--primary-dark); }
+.row:has(input:checked) .radio::after { content: ""; width: 6px; height: 11px; margin-top: -2px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.row:has(input:checked) .txt b { color: var(--primary-dark); }
+.row:has(input:focus-visible) { outline: 3px solid var(--primary); outline-offset: -3px; }
+.content .caption { margin-top: 12px; font-size: 13px; color: var(--text-3); }
+.bottom { margin-top: auto; padding-top: 24px; }
+.proto { margin-top: 12px; font-size: 12px; color: var(--text-3); text-align: center; }
