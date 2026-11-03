@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>본인 인증</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/verification.css">
+  <script src="../js/common.js" defer></script>
+  <script src="../js/verification.js" defer></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+</svg>
+<main class="screen">
+  <header class="app-bar">
+    <a class="icon-btn" href="./signup-entry.html" aria-label="가입 방식 선택으로 돌아가기"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <h1>회원가입</h1>
+    <span></span>
+  </header>
+
+  <section class="progress" aria-label="가입 진행 상태">
+    <div class="progress-meta"><strong>본인 인증</strong><span>2 / 4 단계</span></div>
+    <ol class="progress-bar" aria-hidden="true"><li class="done"></li><li class="done"></li><li></li><li></li></ol>
+    <ol class="progress-steps">
+      <li>가입 방식</li><li aria-current="step">본인 인증</li><li>약관 동의</li><li>정보 입력</li>
+    </ol>
+  </section>
+
+  <section class="intro">
+    <h2>본인 인증 방법을 선택해 주세요</h2>
+    <p>안전한 회원가입을 위해 본인 확인이 필요해요.</p>
+  </section>
+
+  <form class="content" id="verification-form">
+    <fieldset>
+      <legend class="sr-only">인증 방법 선택</legend>
+
+      <label class="vcard">
+        <input type="radio" name="verification" value="phone">
+        <span class="ico"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg></span>
+        <span class="title">휴대폰 인증</span>
+        <span class="desc">본인 명의 휴대폰을 이용해 인증해요.</span>
+        <span class="check" aria-hidden="true"></span>
+      </label>
+
+      <label class="vcard">
+        <input type="radio" name="verification" value="certificate">
+        <span class="ico shinhan"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.5 7.5-8 9-4.5-1.5-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></span>
+        <span class="title">신한인증서</span>
+        <span class="desc">신한인증서를 이용해 본인을 확인해요.</span>
+        <span class="check" aria-hidden="true"></span>
+      </label>
+
+      <label class="vcard">
+        <input type="radio" name="verification" value="card">
+        <span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg></span>
+        <span class="title">카드 인증</span>
+        <span class="desc">지원되는 카드로 본인을 확인해요.</span>
+        <span class="check" aria-hidden="true"></span>
+      </label>
+    </fieldset>
+
+    <p class="helper"><svg><use href="#i-info"/></svg>이용 가능한 인증 방법과 조건은 가입 유형에 따라 다를 수 있어요.</p>
+
+    <button class="btn-primary" id="continue-button" type="submit" disabled>인증 방법을 선택해 주세요</button>
+    <p class="proto">※ 프로토타입이에요. 실제 본인 인증 없이 다음 화면으로 이동해요.</p>
+  </form>
+</main>
+</body>
+</html>
