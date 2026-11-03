@@ -156,12 +156,13 @@
   .si-msg svg { flex-shrink: 0; margin-top: 1px; }
 
   /* 비밀번호 규칙: 입력창 밖으로 꺼낸 체크리스트 */
-  .si-rules { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .si-rules { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: nowrap; gap: 10px; white-space: nowrap; }
   .si-rules li {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 13px; color: var(--si-content-4);
+    display: flex; align-items: center; gap: 2px;
+    font-size: 12px; color: var(--si-content-4);
     transition: color .2s ease-in-out;
   }
+  .si-rules li svg { width: 12px; height: 12px; }
   .si-rules li.is-ok { color: var(--si-positive); }
   .si-rules li.is-bad { color: var(--si-negative); }
 
@@ -262,8 +263,10 @@
         </div>
         <!-- 기존 2줄 placeholder 문구를 입력창 밖으로 -->
         <ul class="si-rules" id="siPwRules">
-          <li data-rule="combo">영문 대/소문자·숫자·특수문자 중 3가지 이상</li>
-          <li data-rule="length">8~20자</li>
+          <li data-rule="length">8자 이상</li>
+          <li data-rule="lower">소문자</li>
+          <li data-rule="digit">숫자</li>
+          <li data-rule="special">특수문자</li>
         </ul>
       </div>
 
@@ -498,30 +501,31 @@
 
   /* ---------- 비밀번호 ---------- */
   var pw = $('siPw'), pw2 = $('siPw2'), pw2Msg = $('siPw2Msg');
-  var ruleCombo = form.querySelector('[data-rule="combo"]');
-  var ruleLen = form.querySelector('[data-rule="length"]');
+  // 비밀번호 규칙: 칠 때마다 항목별로 체크 표시
+  var PW_RULES = {
+    length:  function (v) { return v.length >= 8 && v.length <= 20; },
+    lower:   function (v) { return /[a-z]/.test(v); },
+    digit:   function (v) { return /[0-9]/.test(v); },
+    special: function (v) { return /[^A-Za-z0-9\s]/.test(v); }
+  };
+  var ruleEls = Array.prototype.slice.call(form.querySelectorAll('[data-rule]'));
+  ruleEls.forEach(function (li) { li.setAttribute('data-text', li.textContent); });
 
-  function pwKinds(v) {
-    var n = 0;
-    if (/[a-z]/.test(v)) n++;
-    if (/[A-Z]/.test(v)) n++;
-    if (/[0-9]/.test(v)) n++;
-    if (/[^A-Za-z0-9\s]/.test(v)) n++;
-    return n;
+  function pwValid(v) {
+    if (/\s/.test(v)) return false;
+    return Object.keys(PW_RULES).every(function (k) { return PW_RULES[k](v); });
   }
-  function pwValid(v) { return v.length >= 8 && v.length <= 20 && pwKinds(v) >= 3 && !/\s/.test(v); }
 
-  function paintRule(li, ok, showBad) {
-    li.classList.toggle('is-ok', ok);
-    li.classList.toggle('is-bad', !ok && showBad);
-    li.innerHTML = (ok ? ICON.check : '') + '<span></span>';
-    li.lastChild.textContent = li === ruleCombo ? '영문 대/소문자·숫자·특수문자 중 3가지 이상' : '8~20자';
-  }
   function validatePw() {
     var v = pw.value;
     var showBad = state.pwTouched && v.length > 0;
-    paintRule(ruleCombo, pwKinds(v) >= 3, showBad);
-    paintRule(ruleLen, v.length >= 8 && v.length <= 20, showBad);
+    ruleEls.forEach(function (li) {
+      var ok = v.length > 0 && PW_RULES[li.getAttribute('data-rule')](v);
+      li.classList.toggle('is-ok', ok);
+      li.classList.toggle('is-bad', !ok && showBad);
+      li.innerHTML = ICON.check + '<span></span>';
+      li.lastChild.textContent = li.getAttribute('data-text');
+    });
     setFieldError('password', showBad && !pwValid(v));
   }
 
