@@ -83,6 +83,7 @@
   .si-title { margin: 0 0 6px; font-size: 24px; font-weight: 700; line-height: 1.3; }
   .si-desc { margin: 0 0 28px; font-size: 14px; line-height: 1.5; color: var(--si-content-3); }
   .si-req { color: var(--si-negative); }
+  .si-opt { font-weight: 400; color: var(--si-content-4); }
 
   .si-field { margin-bottom: 24px; }
   .si-label {
@@ -111,6 +112,7 @@
     background: var(--si-bg-3); border-color: var(--si-bg-3); color: var(--si-content-2);
   }
   .si-input.has-end { padding-right: 48px; }
+  .si-textarea { height: auto; min-height: var(--si-field-h); padding: 13px 16px; line-height: 1.4; resize: none; overflow: hidden; display: block; }
   .si-field.is-error .si-input:not([readonly]),
   .si-field.is-error .si-select { border-color: var(--si-negative); }
 
@@ -163,6 +165,9 @@
   .si-rules li.is-ok { color: var(--si-positive); }
   .si-rules li.is-bad { color: var(--si-negative); }
 
+  .si-addr-extra { display: grid; gap: 8px; margin-top: 8px; }
+  .si-addr-extra[hidden] { display: none; }
+
   /* ----- 하단 고정 버튼 ----- */
   .si-bottom {
     position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
@@ -172,6 +177,30 @@
     z-index: 20;
   }
   .si-bottom .si-btn { width: 100%; font-size: 16px; }
+
+  /* ----- 주소 검색 레이어 ----- */
+  .si-layer {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(25,25,35,.45);
+  }
+  .si-layer[hidden] { display: none; }
+  .si-sheet {
+    width: 100%; max-width: 480px; height: 88vh;
+    background: #fff; border-radius: 16px 16px 0 0;
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: si-up .4s cubic-bezier(0.23, 1, 0.5, 1);
+  }
+  @keyframes si-up { from { transform: translateY(100%); } to { transform: none; } }
+  .si-sheet-head {
+    height: 56px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 8px 0 20px; border-bottom: 1px solid var(--si-border-2);
+    font-size: 17px; font-weight: 700;
+  }
+  .si-sheet-body { flex: 1; position: relative; }
+  .si-sheet-body > div { width: 100%; height: 100%; }
+  .si-fallback { padding: 24px 20px; font-size: 14px; line-height: 1.6; color: var(--si-content-2); }
 
   /* ----- 토스트 ----- */
   .si-toast {
@@ -207,20 +236,6 @@
     <p class="si-desc"><span class="si-req">*</span> 표시는 필수 입력 항목이에요.</p>
 
     <form id="siForm" novalidate autocomplete="on">
-
-      <!-- 아이디 -->
-      <div class="si-field" data-field="userId">
-        <label class="si-label" for="siUserId">아이디 <span class="si-req">*</span></label>
-        <div class="si-row">
-          <div class="si-input-wrap">
-            <input class="si-input" id="siUserId" name="userId" type="text" inputmode="latin"
-                   autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20"
-                   placeholder="영문, 숫자 6~20자" />
-          </div>
-          <button type="button" class="si-btn si-btn-outline" id="siIdCheck" disabled>중복확인</button>
-        </div>
-        <p class="si-msg" id="siUserIdMsg" hidden></p>
-      </div>
 
       <!-- 비밀번호 -->
       <div class="si-field" data-field="password">
@@ -292,6 +307,24 @@
         <p class="si-msg" id="siEmailMsg" hidden></p>
       </div>
 
+      <!-- 자택주소 (선택) : 우편번호를 바로 입력해도 검색 -->
+      <div class="si-field" data-field="address">
+        <label class="si-label" for="siZip">자택주소 <span class="si-opt">(선택)</span></label>
+        <div class="si-row">
+          <div class="si-input-wrap">
+            <input class="si-input" id="siZip" name="zipcode" type="text" autocomplete="postal-code"
+                   placeholder="우편번호 또는 주소 입력" enterkeyhint="search" />
+          </div>
+          <button type="button" class="si-btn si-btn-outline" id="siAddrSearch">주소 검색</button>
+        </div>
+        <div class="si-addr-extra" id="siAddrExtra" hidden>
+          <textarea class="si-input si-textarea" id="siAddr1" name="address1" rows="1" readonly aria-label="기본주소"></textarea>
+          <input class="si-input" id="siAddr2" name="address2" type="text" autocomplete="address-line2"
+                 placeholder="상세주소 입력 (동·호수 등)" aria-label="상세주소" />
+        </div>
+        <p class="si-msg is-info" id="siAddrMsg">우편번호 5자리나 도로명·지번·건물명으로 검색할 수 있어요.</p>
+      </div>
+
     </form>
   </main>
 
@@ -299,9 +332,24 @@
     <button type="submit" form="siForm" class="si-btn si-btn-primary" id="siSubmit" disabled>다음</button>
   </div>
 
+  <!-- 주소 검색 레이어 -->
+  <div class="si-layer" id="siAddrLayer" hidden role="dialog" aria-modal="true" aria-labelledby="siAddrLayerTitle">
+    <div class="si-sheet">
+      <div class="si-sheet-head">
+        <span id="siAddrLayerTitle">주소 검색</span>
+        <button type="button" class="si-icon-btn" id="siAddrClose" aria-label="닫기">
+          <svg width="22" height="22" fill="none" stroke="#191923" stroke-width="2" stroke-linecap="round"><path d="M5 5l12 12M17 5L5 17"/></svg>
+        </button>
+      </div>
+      <div class="si-sheet-body" id="siAddrBody"></div>
+    </div>
+  </div>
+
   <div class="si-toast" id="siToast" role="status"></div>
 </div>
 
+<!-- 카카오(다음) 우편번호 서비스 : 키 없이 무료 -->
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" async></script>
 <script>
 /*
  * 정보입력 화면 (information 브랜치)
@@ -312,13 +360,6 @@
 
   /* ===== 다른 화면/서버와 연결할 때 바꾸는 부분 ===== */
   var config = {
-    // 아이디 중복확인. 서버가 생기면 이 함수만 fetch로 바꾸면 된다. true = 사용 가능
-    checkIdAvailable: function (id) {
-      var taken = ['admin', 'shinsegae', 'test1234', 'gudals4360'];
-      return new Promise(function (resolve) {
-        setTimeout(function () { resolve(taken.indexOf(id) === -1); }, 300);
-      });
-    },
     // 다음 단계 주소. 비워두면 이동하지 않고 이벤트만 보낸다.
     nextUrl: '',
     // 본인인증 값이 없을 때 보여줄 예시 (화면 확인용)
@@ -329,10 +370,9 @@
   var form = $('siForm');
 
   var state = {
-    idChecked: false,     // 중복확인 통과한 아이디
-    checkedId: '',
     pwTouched: false,
-    pw2Touched: false
+    pw2Touched: false,
+    addrSelected: false
   };
 
   /* ---------- 아이콘 ---------- */
@@ -383,55 +423,6 @@
     $('siPhone').value = formatPhone(v && v.phone);
     updateSubmit();
   }
-
-  /* ---------- 아이디 ---------- */
-  var idInput = $('siUserId'), idBtn = $('siIdCheck'), idMsg = $('siUserIdMsg');
-  function idFormatOk(v) { return /^(?=.*[a-z])[a-z0-9]{6,20}$/.test(v); }
-
-  idInput.addEventListener('input', function () {
-    // 대문자는 소문자로, 영문·숫자 외 문자는 제거
-    var clean = idInput.value.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (clean !== idInput.value) idInput.value = clean;
-    if (state.checkedId !== clean) { state.idChecked = false; }
-    idBtn.disabled = !idFormatOk(clean);
-    if (!clean) { setMsg(idMsg); setFieldError('userId', false); }
-    else if (!idFormatOk(clean)) {
-      setMsg(idMsg, 'info', '영문 소문자를 포함해 영문, 숫자 6~20자로 입력해 주세요.');
-      setFieldError('userId', false);
-    } else if (!state.idChecked) {
-      setMsg(idMsg, 'info', '중복확인을 해 주세요.');
-      setFieldError('userId', false);
-    }
-    updateSubmit();
-  });
-  idInput.addEventListener('blur', function () {
-    var v = idInput.value;
-    if (v && !idFormatOk(v)) {
-      setMsg(idMsg, 'error', '영문 소문자를 포함해 영문, 숫자 6~20자로 입력해 주세요.');
-      setFieldError('userId', true);
-    }
-  });
-  idInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); if (!idBtn.disabled) idBtn.click(); }
-  });
-  idBtn.addEventListener('click', function () {
-    var v = idInput.value;
-    if (!idFormatOk(v)) return;
-    idBtn.disabled = true;
-    idBtn.textContent = '확인 중';
-    Promise.resolve(config.checkIdAvailable(v)).then(function (ok) {
-      if (idInput.value !== v) return; // 확인 중에 값이 바뀜
-      state.idChecked = ok; state.checkedId = ok ? v : '';
-      setMsg(idMsg, ok ? 'success' : 'error', ok ? '사용할 수 있는 아이디예요.' : '이미 사용 중인 아이디예요.');
-      setFieldError('userId', !ok);
-      updateSubmit();
-    }).catch(function () {
-      setMsg(idMsg, 'error', '잠시 후 다시 시도해 주세요.');
-    }).then(function () {
-      idBtn.textContent = '중복확인';
-      idBtn.disabled = !idFormatOk(idInput.value);
-    });
-  });
 
   /* ---------- 비밀번호 ---------- */
   var pw = $('siPw'), pw2 = $('siPw2'), pw2Msg = $('siPw2Msg');
@@ -554,22 +545,106 @@
   dInput.addEventListener('blur', function () { emailTouched = true; validateEmail(); });
   dReset.addEventListener('click', function () { showDirect(false); dSel.focus(); validateEmail(); updateSubmit(); });
 
+  /* ---------- 주소 ---------- */
+  var zip = $('siZip'), addrBtn = $('siAddrSearch'), addrExtra = $('siAddrExtra'),
+      addr1 = $('siAddr1'), addr2 = $('siAddr2'), addrMsg = $('siAddrMsg'),
+      layer = $('siAddrLayer'), layerBody = $('siAddrBody');
+
+  function clearAddress() {
+    state.addrSelected = false;
+    addr1.value = ''; addr2.value = '';
+    addrExtra.hidden = true;
+    zip.removeAttribute('data-zonecode');
+    setMsg(addrMsg, 'info', '우편번호 5자리나 도로명·지번·건물명으로 검색할 수 있어요.');
+    updateSubmit();
+  }
+  zip.addEventListener('input', function () {
+    if (state.addrSelected) clearAddress();
+    // 숫자만 친 경우 5자리 넘지 않게
+    if (/^\d+$/.test(zip.value) && zip.value.length > 5) zip.value = zip.value.slice(0, 5);
+    // 우편번호 5자리를 다 치면 바로 검색창이 열림
+    if (/^\d{5}$/.test(zip.value)) openPostcode(zip.value);
+  });
+  zip.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); openPostcode(zip.value.trim()); }
+  });
+  addrBtn.addEventListener('click', function () {
+    openPostcode(state.addrSelected ? '' : zip.value.trim());
+  });
+
+  function onAddressPicked(data) {
+    var base = data.roadAddress || data.jibunAddress || data.address;
+    var extra = '';
+    if (data.userSelectedType === 'R' || data.roadAddress) {
+      if (data.bname && /[동로가]$/.test(data.bname)) extra += data.bname;
+      if (data.buildingName && data.apartment === 'Y') extra += (extra ? ', ' : '') + data.buildingName;
+    }
+    if (extra) base += ' (' + extra + ')';
+    zip.value = data.zonecode;
+    zip.setAttribute('data-zonecode', data.zonecode);
+    addr1.value = base;
+    addrExtra.hidden = false;
+    addr1.style.height = 'auto'; addr1.style.height = addr1.scrollHeight + 2 + 'px';
+    state.addrSelected = true;
+    setMsg(addrMsg);
+    closeLayer();
+    addr2.focus();
+    updateSubmit();
+  }
+
+  function openPostcode(query) {
+    layer.hidden = false;
+    document.body.style.overflow = 'hidden';
+    layerBody.innerHTML = '';
+    var tryOpen = function (tries) {
+      if (window.daum && daum.Postcode) {
+        var box = document.createElement('div');
+        layerBody.appendChild(box);
+        new daum.Postcode({
+          oncomplete: onAddressPicked,
+          width: '100%', height: '100%',
+          animation: false,
+          autoClose: false
+        }).embed(box, { q: query || '', autoClose: false });
+      } else if (tries > 0) {
+        setTimeout(function () { tryOpen(tries - 1); }, 200);
+      } else {
+        layerBody.innerHTML = '<div class="si-fallback">주소 검색 서비스를 불러오지 못했어요.<br>네트워크 상태를 확인한 뒤 다시 시도해 주세요.</div>';
+      }
+    };
+    tryOpen(15);
+  }
+  function closeLayer() {
+    layer.hidden = true;
+    layerBody.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+  $('siAddrClose').addEventListener('click', closeLayer);
+  layer.addEventListener('click', function (e) { if (e.target === layer) closeLayer(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !layer.hidden) closeLayer(); });
+  addr2.addEventListener('input', updateSubmit);
+
   /* ---------- 다음 버튼 ---------- */
   function isComplete() {
-    return state.idChecked && state.checkedId === idInput.value &&
-      pwValid(pw.value) && pw.value === pw2.value &&
+    return pwValid(pw.value) && pw.value === pw2.value &&
       !!$('siName').value && !!$('siPhone').value &&
       emailValid();
+    // 자택주소는 선택 항목이라 비워도 넘어갈 수 있음
   }
   function updateSubmit() { $('siSubmit').disabled = !isComplete(); }
 
   function collect() {
     return {
-      userId: idInput.value,
       password: pw.value,
       name: $('siName').value,
       phone: $('siPhone').value,
-      email: emailValue()
+      email: emailValue(),
+      // 주소를 고르지 않았으면 null
+      address: state.addrSelected ? {
+        zipcode: zip.getAttribute('data-zonecode') || zip.value,
+        address1: addr1.value,
+        address2: addr2.value.trim()
+      } : null
     };
   }
 
