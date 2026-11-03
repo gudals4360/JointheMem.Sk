@@ -317,7 +317,7 @@ fieldset { margin: 0; padding: 0; border: 0; min-width: 0; border-top: 1px solid
 .proto { margin-top: 12px; font-size: 12px; color: var(--text-3); text-align: center; }
 
 }
-.cs {
+.cs-old {
 
 /* 토큰: gs-shop design.md (primary=계정·인증 파랑, content/bg/border 스케일, 4px spacing, radius m/l/xl) */
 &{
@@ -443,7 +443,88 @@ section{padding:0 16px;margin-top:20px}
 .info div span:first-child{color:var(--c3)}
 
 }
-.cs { font-family:"Pretendard Variable","Pretendard",-apple-system,"Malgun Gothic",sans-serif; }
+.cs-old { font-family:"Pretendard Variable","Pretendard",-apple-system,"Malgun Gothic",sans-serif; }
+.cs .head h1 em { font-style: normal; color: #0A61EB; }
+
+.cs { --blue:#0A61EB; --blue-l:#ECF4FE; --ink:#191923; --ink2:#424252; --ink3:#72728A; --dis:#BABAD4; --bg3:#F5F6FA; --line:#EAECF5; --pos:#12891D; --pos-l:#E8F7E9;
+  font-family: "Pretendard Variable","Pretendard",-apple-system,"Malgun Gothic",sans-serif; color: var(--ink); background: var(--bg3); letter-spacing: -0.025em; font-size: 14px; line-height: 1.5; }
+.cs * { box-sizing: border-box; margin: 0; }
+.cs button { font: inherit; letter-spacing: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
+.cs .page { max-width: 480px; min-height: 100vh; margin: 0 auto; background: #fff; padding-bottom: 112px; }
+.cs .top { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; height: 56px; padding: 0 4px; }
+.cs .top b { text-align: center; font-size: 18px; font-weight: 700; }
+.cs .top .back { display: grid; place-items: center; width: 48px; height: 48px; font-size: 26px; text-align: center; }
+.cs .top .stp { padding-right: 16px; text-align: right; font-size: 14px; font-weight: 600; color: var(--blue); }
+.cs .bar { height: 4px; margin: 0 20px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.cs .bar i { display: block; height: 100%; background: #0F78FF; border-radius: 2px; }
+.cs .head { padding: 32px 20px 20px; }
+.cs .head h1 { font-size: 26px; font-weight: 700; line-height: 1.25; }
+.cs .head p { margin-top: 8px; color: var(--ink3); }
+
+/* 전체 동의: 면으로 구분, 아래는 평평한 체크 리스트 */
+.cs .all { margin: 0 20px; padding: 4px 16px; border-radius: 12px; background: var(--bg3); }
+.cs .all .rw { min-height: 56px; font-size: 16px; font-weight: 700; }
+.cs .rw { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; }
+.cs .rw small { display: block; margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--ink3); }
+.cs .all .rw small { display: block; margin: 0; }
+.cs .ck { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--dis); background: #fff; transition: all .2s ease-in-out; }
+.cs .ck::after { content: ""; width: 5px; height: 10px; margin-top: -2px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); opacity: 0; }
+.cs .on > .ck, .cs .ck.on, .cs .rw.on .ck { background: var(--blue); border-color: var(--blue); }
+.cs .on > .ck::after, .cs .ck.on::after, .cs .rw.on .ck::after { opacity: 1; }
+.cs .rw:focus-visible, .cs .tg:focus-visible, .cs .btn:focus-visible { outline: 3px solid #0F78FF; outline-offset: 2px; border-radius: 6px; }
+.cs .list { list-style: none; padding: 8px 20px 0; }
+.cs .list li { display: flex; align-items: center; gap: 8px; }
+.cs .rq { font-style: normal; font-weight: 600; color: var(--blue); }
+.cs .op { font-style: normal; font-weight: 600; color: var(--ink3); }
+.cs .vw { flex: none; padding: 8px 0 8px 12px; font-size: 13px; color: var(--ink3); text-decoration: underline; cursor: pointer; }
+
+/* 선택 항목: 접어서 보여주기 */
+.cs .acc { margin: 0 20px; border-top: 1px solid var(--line); }
+.cs .acc:first-of-type { margin-top: 12px; }
+.cs .ah { display: flex; align-items: center; }
+.cs .tg { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin-right: -12px; }
+.cs .tg svg { width: 20px; height: 20px; fill: none; stroke: var(--ink3); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s cubic-bezier(.23,1,.5,1); }
+.cs .tg[aria-expanded="true"] svg { transform: rotate(180deg); }
+.cs .ab { list-style: none; padding: 0 0 8px 34px; }
+.cs .ab[hidden] { display: none; }
+.cs .ab .rw { min-height: 44px; font-size: 14px; color: var(--ink2); }
+.cs .perk { margin: 0 0 8px 34px; padding: 8px 12px; border-radius: 8px; background: #FFF5ED; color: #F95401; font-size: 12px; font-weight: 600; }
+.cs .mx { padding: 0 0 8px 34px; }
+.cs .mr { display: grid; grid-template-columns: 1fr 72px 72px; align-items: center; min-height: 44px; border-bottom: 1px solid var(--line); }
+.cs .mr:last-child { border-bottom: 0; }
+.cs .mr.h { min-height: 32px; font-size: 12px; color: var(--ink3); font-weight: 600; }
+.cs .mr.h span:not(:first-child) { text-align: center; }
+.cs .mr .cell { display: flex; justify-content: center; }
+.cs .mr .cell .rw { width: auto; min-height: 44px; }
+.cs .sum { margin: 4px 20px 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.cs .note { margin: 4px 20px 0; font-size: 12px; color: var(--ink3); }
+
+/* 하단 고정 CTA */
+.cs .cta { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); background: linear-gradient(to top, #fff 80%, rgba(255,255,255,0)); z-index: 6; }
+.cs .btn { display: block; width: 100%; height: 52px; border-radius: 8px; background: var(--blue); color: #fff; font-size: 16px; font-weight: 600; text-align: center; transition: all .2s ease-in-out; }
+.cs .btn:disabled { background: var(--line); color: var(--ink3); cursor: not-allowed; }
+.cs .btn.ghost { margin-top: 8px; background: #fff; color: var(--ink); border: 1px solid #D2D4E5; }
+
+/* 가입 완료 */
+.cs .hero { padding: 48px 20px 8px; text-align: center; }
+.cs .hero .ok { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%; background: #0F78FF; }
+.cs .hero .ok svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.cs .hero h1 { font-size: 24px; font-weight: 700; line-height: 1.3; }
+.cs .hero p { margin-top: 8px; color: var(--ink3); }
+.cs .card { margin: 24px 20px 0; border-radius: 16px; background: var(--bg3); overflow: hidden; }
+.cs .card .ch { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 16px 4px; font-weight: 700; font-size: 16px; }
+.cs .card .ch small { font-weight: 400; color: var(--ink3); font-size: 12px; }
+.cs .li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; }
+.cs .li > span:first-child { flex: 1; }
+.cs .li small { display: block; color: var(--ink3); font-size: 12px; }
+.cs .info > div:not(.ch) { display: flex; justify-content: space-between; gap: 12px; padding: 10px 16px; }
+.cs .info > div:not(.ch) span:first-child { color: var(--ink3); }
+.cs .info > div:last-child { padding-bottom: 16px; }
+.cs .badge { flex: none; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 1px 8px; }
+.cs .badge.y { background: var(--pos-l); color: var(--pos); }
+.cs .badge.n { background: #fff; color: var(--ink3); }
+
+
 .ev .intro h2 em { font-style: normal; color: #0A61EB; }
 /* 가입 혜택 캐러셀 (가입 방식 선택 화면) */
 #v-entry .cr { margin: 0 0 44px; }
@@ -699,69 +780,45 @@ section{padding:0 16px;margin-top:20px}
 
 </div>
 
-<!-- 4. 약관 동의 (Terms-of-Service 브랜치) -->
+<!-- 4. 약관 동의 -->
 <div class="cs" id="v-consent" data-screen="consent" hidden>
-<div class="app">
-
-<div id="consent">
-  <header><button type="button" data-back aria-label="뒤로">‹</button><b>회원가입</b><span style="width:24px"></span></header>
-  <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
-  <p class="sub" style="padding-bottom:0"><b style="color:var(--primary)">4</b> / 4 · 약관 동의</p>
-  <h1>약관 동의 한 번으로<br>통합 ID 가입을 끝내요</h1>
-  <p class="sub">필수 항목만 동의해도 가입할 수 있어요. 선택 항목은 나중에 마이페이지에서 바꿀 수 있어요.</p>
-
-  <section style="margin-top:0">
-    <button class="all" id="allBtn" type="button">
-      <span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>
-      <span><strong>전체 동의하기</strong><small>필수 + 선택(통합 서비스·마케팅 포함) 모두 동의</small></span>
-    </button>
+<div class="page">
+  <header class="top"><button type="button" class="back" data-back aria-label="이전 단계">‹</button><b>회원가입</b><span class="stp">4/4</span></header>
+  <div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="4" aria-label="약관 동의, 4 / 4 단계"><i style="width:100%"></i></div>
+  <section class="head">
+    <h1><em>약관에 동의</em>해 주세요</h1>
+    <p>필수 항목만 동의해도 가입할 수 있어요.</p>
   </section>
 
-  <!-- 필수 -->
-  <section>
-    <div class="gh"><span class="tag req">필수</span><h2>가입에 꼭 필요해요</h2><span class="cnt" id="reqCnt"></span></div>
-    <div class="req-box" id="reqBox"></div>
-  </section>
+  <div class="all"><button type="button" class="rw" id="allBtn" role="checkbox" aria-checked="false"><span class="ck"></span><span>전체 동의<small>선택 항목(통합 서비스·마케팅)까지 모두 동의해요</small></span></button></div>
 
-  <!-- 선택: 통합 ID 서비스 -->
-  <section>
-    <div class="gh"><span class="tag opt">선택</span><h2>통합 ID로 이용할 서비스</h2></div>
-    <div class="opt-box">
-      <div class="svc-head">
-        <div class="t"><b>9개 서비스 한 번에 이용</b><small id="svcSub"></small></div>
-        <button class="bck" id="svcAll" role="checkbox" aria-label="통합 서비스 전체 이용"><span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
-      </div>
-      <div class="brands" id="svcList"></div>
+  <ul class="list" id="reqList"></ul>
+
+  <div class="acc">
+    <div class="ah">
+      <button type="button" class="rw" id="svcAll" role="checkbox" aria-checked="false"><span class="ck"></span><span><i class="op">(선택)</i> 통합 ID 서비스 이용<small id="svcSub"></small></span></button>
+      <button type="button" class="tg" data-acc="svcList" aria-expanded="false" aria-label="서비스 목록 펼치기"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
-  </section>
-
-  <!-- 선택: 마케팅 (한 번만) -->
-  <section>
-    <div class="gh"><span class="tag opt">선택</span><h2>마케팅 수신 동의</h2></div>
-    <div class="opt-box">
-      <div class="mk-head">
-        <div class="t">전체 수신 동의<small>신세계포인트 · 이마트 · 백화점 · 면세점</small></div>
-        <button class="bck" id="mkAll" role="checkbox" aria-label="마케팅 전체 동의"><span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span></button>
-      </div>
-      <div class="reward" id="reward">면세점 마케팅 동의 시 GOLD 등급(최대 15% 할인) 즉시 적용 · 유지 1년</div>
-      <div class="matrix" id="matrix"></div>
-      <div class="summary" id="mkSum"></div>
-    </div>
-    <p class="note">광고성 정보 수신을 거부해도 주문·배송·약관 변경 등 고객 안내는 발송돼요.</p>
-  </section>
-
-  <div class="cta">
-    <div class="msg" id="msg"></div>
-    <button class="btn" id="submit" type="button">동의하고 가입하기</button>
+    <ul class="ab" id="svcList" hidden></ul>
   </div>
-</div>
 
+  <div class="acc">
+    <div class="ah">
+      <button type="button" class="rw" id="mkAll" role="checkbox" aria-checked="false"><span class="ck"></span><span><i class="op">(선택)</i> 마케팅 수신 동의<small>포인트 · 면세점</small></span></button>
+      <button type="button" class="tg" data-acc="mkBody" aria-expanded="false" aria-label="수신 방법 펼치기"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
+    <p class="perk">면세점 마케팅 동의 시 GOLD 등급(최대 15% 할인) 즉시 적용 · 유지 1년</p>
+    <div id="mkBody" hidden><div class="mx" id="matrix"></div></div>
+  </div>
+  <div class="sum" id="mkSum" hidden></div>
+  <p class="note">광고성 정보 수신을 거부해도 주문·배송·약관 변경 등 고객 안내는 발송돼요.</p>
 
+  <div class="cta"><button class="btn" id="submit" type="button">동의하고 가입하기</button></div>
 </div>
 </div>
 
 <!-- 5. 가입 완료 -->
-<div class="cs" id="v-done" data-screen="done" hidden>
+<div class="cs-old" id="v-done" data-screen="done" hidden>
 <div class="app">
 <!-- ========== 2. 완료 화면 (팝업 2번 → 결과 한 번) ========== -->
 <div id="done">
@@ -1257,88 +1314,62 @@ form.addEventListener("submit", (e) => {
 </script>
 <script>
 (function(){
-
-const CHECK='<span class="ck"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>';
 const $=s=>document.querySelector(s);
-const state={
-  req:{terms:false,privacy:false,age:false},
-  svc:Object.fromEntries(["이마트","신세계백화점","신백멤버스","신세계아울렛","시코르","이마트에브리데이","신세계까사","스타필드","이마트24"].map(n=>[n,false])),
-  mk:{point:{이메일:false,문자:false,우편:false,전화:false},duty:{이메일:false,문자:false,우편:false,전화:false},night:false}
-};
-const REQ=[["terms","[필수] 서비스 이용약관"],["privacy","[필수] 개인정보 수집·이용 동의"],["age","[필수] 만 14세 이상입니다"]];
-const BRAND={"이마트":["#FFB81C","emart"],"신세계백화점":["#A0A0A0","SHINSEGAE"],"신백멤버스":["#000","신백멤버스"],"신세계아울렛":["#A5005A","OUTLETS"],"시코르":["#000","CHICOR"],"이마트에브리데이":["#4D5058","everyday"],"신세계까사":["#000","CASA"],"스타필드":["#C30F2E","Starfield"],"이마트24":["#4D5058","emart24"]};
+const SVC=["이마트","신세계백화점","신백멤버스","신세계아울렛","시코르","이마트에브리데이","신세계까사","스타필드","이마트24"];
+const REQ=[["terms","서비스 이용약관"],["privacy","개인정보 수집·이용 동의"],["age","만 14세 이상입니다"]];
 const CH=["이메일","문자","우편","전화"];
+const state={req:{terms:false,privacy:false,age:false},svc:Object.fromEntries(SVC.map(n=>[n,false])),
+  mk:{point:Object.fromEntries(CH.map(c=>[c,false])),duty:Object.fromEntries(CH.map(c=>[c,false])),night:false}};
 const vals=o=>Object.values(o);
-const mkAllOn=()=>CH.every(c=>state.mk.point[c]&&state.mk.duty[c]);
-const svcAllOn=()=>vals(state.svc).every(Boolean);
-const reqAllOn=()=>vals(state.req).every(Boolean);
+const reqAll=()=>vals(state.req).every(Boolean), svcAll=()=>vals(state.svc).every(Boolean);
+const mkAll=()=>CH.every(c=>state.mk.point[c]&&state.mk.duty[c])&&state.mk.night;
+const rw=(attr,on,label,cls="")=>`<button type="button" class="rw ${on?'on':''} ${cls}" ${attr} role="checkbox" aria-checked="${on}"><span class="ck"></span><span>${label}</span></button>`;
+const names=o=>({y:CH.filter(c=>o[c]),n:CH.filter(c=>!o[c])});
+const badge=y=>y?'<span class="badge y">동의</span>':'<span class="badge n">미동의</span>';
 
 function render(){
-  // 필수
-  $("#reqBox").innerHTML=REQ.map(([k,t])=>`<div class="row ${state.req[k]?'on':''}" data-req="${k}" role="checkbox" tabindex="0">${CHECK}<span class="t">${t}</span><span class="view">보기</span></div>`).join("");
-  const rc=vals(state.req).filter(Boolean).length;
-  $("#reqCnt").textContent=`${rc}/3`;
-  // 전체
-  const everything=reqAllOn()&&svcAllOn()&&mkAllOn()&&state.mk.night;
-  $("#allBtn").classList.toggle("on",everything);
-  // 서비스
-  const sc=vals(state.svc).filter(Boolean).length;
-  $("#svcSub").textContent=`${sc}/9 선택됨`;
-  $("#svcAll").classList.toggle("on",svcAllOn());$("#svcAll").setAttribute("aria-checked",svcAllOn());
-  $("#svcList").innerHTML=Object.entries(state.svc).map(([n,v])=>`<div class="brand" style="--bc:${BRAND[n][0]}"><span class="lg">${BRAND[n][1]}</span><span class="nm">${n}</span><button class="bck ${v?'on':''}" data-svc="${n}" role="checkbox" aria-checked="${v}" aria-label="${n}">${CHECK}</button></div>`).join("");
-  // 마케팅 매트릭스
-  $("#mkAll").classList.toggle("on",mkAllOn());
-  $("#matrix").innerHTML=`<div class="mr h"><span>수신 방법</span><span>신세계포인트</span><span>신세계면세점</span></div>`+
-    CH.map(c=>`<div class="mr"><span>${c}</span><span class="cell"><button class="bck ${state.mk.point[c]?'on':''}" data-mk="point:${c}" role="checkbox" aria-label="신세계포인트 ${c}">${CHECK}</button></span><span class="cell"><button class="bck ${state.mk.duty[c]?'on':''}" data-mk="duty:${c}" role="checkbox" aria-label="신세계면세점 ${c}">${CHECK}</button></span></div>`).join("")+
-    `<div class="mr"><span>야간(21~08시) 수신<br><small style="color:var(--c3);font-size:12px">면세점 한정</small></span><span></span><span class="cell"><button class="bck ${state.mk.night?'on':''}" data-night role="checkbox" aria-label="야간 수신">${CHECK}</button></span></div>`;
-  $("#mkSum").innerHTML=summaryRows();
-  // CTA
-  const left=3-rc;
+  $("#reqList").innerHTML=REQ.map(([k,t])=>`<li>${rw(`data-req="${k}"`,state.req[k],`<i class="rq">(필수)</i> ${t}`)}<a class="vw" data-view role="button" tabindex="0">보기</a></li>`).join("");
+  const set=(id,on)=>{const e=$(id);e.classList.toggle("on",on);e.setAttribute("aria-checked",on)};
+  set("#allBtn",reqAll()&&svcAll()&&mkAll()); set("#svcAll",svcAll()); set("#mkAll",mkAll());
+  $("#svcSub").textContent=`${vals(state.svc).filter(Boolean).length}/9`;
+  $("#svcList").innerHTML=SVC.map(n=>`<li>${rw(`data-svc="${n}"`,state.svc[n],n)}</li>`).join("");
+  const cell=(g,c)=>`<span class="cell">${rw(`data-mk="${g}:${c}" aria-label="${g==='point'?'신세계포인트':'신세계면세점'} ${c}"`,state.mk[g][c],"")}</span>`;
+  $("#matrix").innerHTML=`<div class="mr h"><span>수신 방법</span><span>포인트</span><span>면세점</span></div>`+CH.map(c=>`<div class="mr"><span>${c}</span>${cell("point",c)}${cell("duty",c)}</div>`).join("")+
+    `<div class="mr"><span>야간(21~08시)</span><span></span><span class="cell">${rw('data-night aria-label="야간 수신"',state.mk.night,"")}</span></div>`;
+  const anyMk=CH.some(c=>state.mk.point[c]||state.mk.duty[c]);
+  $("#mkSum").hidden=!anyMk;
+  $("#mkSum").innerHTML=[["신세계포인트",state.mk.point],["신세계면세점",state.mk.duty]].map(([l,o])=>{const {y,n}=names(o);return `<div class="li" style="padding:4px 0"><span><b>${l}</b><small>${y.length?'동의 '+y.join('·'):'미동의'}${y.length&&n.length?' / 미동의 '+n.join('·'):''}</small></span></div>`}).join("");
+  const left=3-vals(state.req).filter(Boolean).length;
   $("#submit").disabled=left>0;
   $("#submit").textContent=left>0?`필수 동의 ${left}개 남았어요`:"동의하고 가입하기";
-  $("#msg").textContent="";
 }
-function names(o){const y=CH.filter(c=>o[c]);return{y,n:CH.filter(c=>!o[c])}}
-function badge(y){return y?'<span class="badge y">동의</span>':'<span class="badge n">미동의</span>'}
-function summaryRows(){
-  return [["신세계포인트",state.mk.point],["신세계면세점",state.mk.duty]].map(([l,o])=>{
-    const {y,n}=names(o);
-    return `<div><b style="width:84px;flex:none">${l}</b><span>${y.length?badge(1)+" "+y.join("·"):""} ${n.length?badge(0)+" "+n.join("·"):""}</span></div>`;
-  }).join("");
-}
+function setAll(v){Object.keys(state.req).forEach(k=>state.req[k]=v);Object.keys(state.svc).forEach(k=>state.svc[k]=v);CH.forEach(c=>{state.mk.point[c]=v;state.mk.duty[c]=v});state.mk.night=v}
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("[data-req],[data-svc],[data-mk],[data-night],#allBtn,#svcAll,#mkAll,.view");
+  const t=e.target.closest("#v-consent [data-req],#v-consent [data-svc],#v-consent [data-mk],#v-consent [data-night],#allBtn,#svcAll,#mkAll,#v-consent [data-view],#v-consent [data-acc]");
   if(!t)return;
-  if(t.classList.contains("view")){e.stopPropagation();alert("약관 전문 보기(프로토타입)");return}
+  if(t.hasAttribute("data-view")){alert("약관 전문 보기(프로토타입)");return}
+  if(t.dataset.acc){const body=document.getElementById(t.dataset.acc),open=body.hidden;body.hidden=!open;t.setAttribute("aria-expanded",open);return}
   if(t.dataset.req)state.req[t.dataset.req]=!state.req[t.dataset.req];
   else if(t.dataset.svc)state.svc[t.dataset.svc]=!state.svc[t.dataset.svc];
   else if(t.dataset.mk){const[g,c]=t.dataset.mk.split(":");state.mk[g][c]=!state.mk[g][c]}
   else if(t.hasAttribute("data-night"))state.mk.night=!state.mk.night;
-  else if(t.id==="allBtn"){const v=!(reqAllOn()&&svcAllOn()&&mkAllOn()&&state.mk.night);
-    Object.keys(state.req).forEach(k=>state.req[k]=v);Object.keys(state.svc).forEach(k=>state.svc[k]=v);
-    CH.forEach(c=>{state.mk.point[c]=v;state.mk.duty[c]=v});state.mk.night=v}
-  else if(t.id==="svcAll"){const v=!svcAllOn();Object.keys(state.svc).forEach(k=>state.svc[k]=v)}
-  else if(t.id==="mkAll"){const v=!mkAllOn();CH.forEach(c=>{state.mk.point[c]=v;state.mk.duty[c]=v});state.mk.night=v}
+  else if(t.id==="allBtn")setAll(!(reqAll()&&svcAll()&&mkAll()));
+  else if(t.id==="svcAll"){const v=!svcAll();Object.keys(state.svc).forEach(k=>state.svc[k]=v)}
+  else if(t.id==="mkAll"){const v=!mkAll();CH.forEach(c=>{state.mk.point[c]=v;state.mk.duty[c]=v});state.mk.night=v}
   render();
 });
 
 $("#submit").addEventListener("click",()=>{
   const d=new Date();$("#doneDate").textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
-  const sc=vals(state.svc).filter(Boolean).length;
-  const p=names(state.mk.point),f=names(state.mk.duty);
+  const sc=vals(state.svc).filter(Boolean).length,p=names(state.mk.point),f=names(state.mk.duty);
   const item=(label,sub,y)=>`<div class="li"><span>${label}${sub?`<small>${sub}</small>`:""}</span>${badge(y)}</div>`;
-  $("#doneList").innerHTML=
-    item("필수 약관 3건","이용약관 · 개인정보 · 만 14세",true)+
-    item("통합 ID 서비스",`${sc}/9 이용`,sc>0)+
-    item("신세계포인트 마케팅",p.y.length?`동의 ${p.y.join("·")}`+(p.n.length?` / 미동의 ${p.n.join("·")}`:""):"전체 미동의",p.y.length>0)+
-    item("신세계면세점 마케팅",f.y.length?`동의 ${f.y.join("·")}`+(f.n.length?` / 미동의 ${f.n.join("·")}`:""):"전체 미동의",f.y.length>0)+
-    item("야간 마케팅","21~08시",state.mk.night);
+  const mk=x=>x.y.length?`동의 ${x.y.join("·")}`+(x.n.length?` / 미동의 ${x.n.join("·")}`:""):"전체 미동의";
+  $("#doneList").innerHTML=item("필수 약관 3건","이용약관 · 개인정보 · 만 14세",true)+item("통합 ID 서비스",`${sc}/9 이용`,sc>0)+item("신세계포인트 마케팅",mk(p),p.y.length>0)+item("신세계면세점 마케팅",mk(f),f.y.length>0)+item("야간 마케팅","21~08시",state.mk.night);
   go("done");
 });
-$("#edit").addEventListener("click",()=>{go("consent")});
+$("#edit").addEventListener("click",()=>go("consent"));
 render();
-
 })();
 </script>
 <script>
