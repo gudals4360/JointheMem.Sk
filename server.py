@@ -15,6 +15,13 @@
   POST /api/signup                 회원가입 + 약관 동의 저장
   POST /api/consents               가입 직후 동의 내용 수정 (가입 응답의 consentToken 필요, 30분 유효)
 
+간편가입 (OAuth, 가입만 한다. 로그인·세션은 아직 없음)
+  GET  /api/auth/providers         사용할 수 있는 제공자와 모드(live | demo)
+  GET  /api/auth/{제공자}/start     제공자 로그인 화면으로 보냄 (state 를 쿠키와 서버에 저장)
+  GET  /api/auth/{제공자}/callback  코드 → 토큰 → 프로필, 가입용 티켓을 만들어 /#social=티켓 으로 돌려보냄
+  POST /api/auth/ticket            {ticket} → 프로필(이메일·닉네임). 가입할 때 signup 에 socialTicket 으로 보냄
+  키는 .env 의 OAUTH_<제공자>_CLIENT_ID / _CLIENT_SECRET 에서 읽는다. 키가 없으면 시연 모드로 가짜 프로필을 쓴다.
+
 탈퇴한 이메일로 다시 가입할 때
   본인인증한 휴대폰이 탈퇴 회원의 휴대폰과 같고 탈퇴 후 30일 이내면 → 복귀 회원 (기존 가입일 유지)
   30일이 지났거나 휴대폰이 다르면                                   → 신규 회원
@@ -24,15 +31,18 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 import secrets
 import sqlite3
 import threading
+import urllib.error
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 ROOT = Path(__file__).resolve().parent
 MAX_BODY = 16 * 1024  # 요청 본문 최대 16KB
@@ -93,6 +103,111 @@ def normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
+# ---------- 간편가입 (OAuth 2.0 인가 코드 방식) ----------
+def load_dotenv(path: Path) -> None:
+    """KEY=VALUE 형식의 .env 를 읽어 환경변수로 넣는다 (이미 있는 값은 그대로 둔다)."""
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+def _kakao_profile(j: dict) -> dict:
+    acc = j.get("kakao_account") or {}
+    return {"subject": str(j["id"]), "email": acc.get("email"),
+            "emailVerified": bool(acc.get("is_email_verified")),
+            "nickname": (acc.get("profile") or {}).get("nickname") or (j.get("properties") or {}).get("nickname")}
+
+
+def _naver_profile(j: dict) -> dict:
+    r = j.get("response") or {}
+    # 네이버는 로그인할 때 이메일을 확인하므로 받은 이메일은 확인된 것으로 본다
+    return {"subject": str(r["id"]), "email": r.get("email"), "emailVerified": bool(r.get("email")),
+            "nickname": r.get("nickname") or r.get("name")}
+
+
+def _google_profile(j: dict) -> dict:
+    return {"subject": str(j["sub"]), "email": j.get("email"), "emailVerified": bool(j.get("email_verified")),
+            "nickname": j.get("name")}
+
+
+# 제공자를 늘리려면 여기에 한 줄 추가하고 .env 에 키를 넣는다
+OAUTH_PROVIDERS = {
+    "kakao": {
+        "name": "카카오",
+        "authorize_url": "https://kauth.kakao.com/oauth/authorize",
+        "token_url": "https://kauth.kakao.com/oauth/token",
+        "profile_url": "https://kapi.kakao.com/v2/user/me",
+        "scope": "account_email profile_nickname",
+        "parse": _kakao_profile,
+    },
+    "naver": {
+        "name": "네이버",
+        "authorize_url": "https://nid.naver.com/oauth2.0/authorize",
+        "token_url": "https://nid.naver.com/oauth2.0/token",
+        "profile_url": "https://openapi.naver.com/v1/nid/me",
+        "scope": "",
+        "token_needs_state": True,
+        "parse": _naver_profile,
+    },
+    "google": {
+        "name": "구글",
+        "authorize_url": "https://accounts.google.com/o/oauth2/v2/auth",
+        "token_url": "https://oauth2.googleapis.com/token",
+        "profile_url": "https://openidconnect.googleapis.com/v1/userinfo",
+        "scope": "openid email profile",
+        "parse": _google_profile,
+    },
+}
+OAUTH_STATE_TTL = timedelta(minutes=10)    # 제공자 로그인 화면에 다녀오는 시간
+SOCIAL_TICKET_TTL = timedelta(minutes=30)  # 콜백 뒤 가입을 마치는 시간
+
+
+def oauth_keys(provider: str) -> tuple[str, str]:
+    p = provider.upper()
+    return os.environ.get(f"OAUTH_{p}_CLIENT_ID", ""), os.environ.get(f"OAUTH_{p}_CLIENT_SECRET", "")
+
+
+def oauth_mode(provider: str) -> str:
+    return "live" if oauth_keys(provider)[0] else "demo"
+
+
+def http_json(url: str, data: dict | None = None, token: str | None = None) -> dict:
+    """제공자 API 호출. data 가 있으면 폼으로 POST, token 이 있으면 Bearer 로 보낸다."""
+    headers = {"Accept": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    body = urlencode(data).encode() if data is not None else None
+    if body is not None:
+        headers["Content-Type"] = "application/x-www-form-urlencoded;charset=utf-8"
+    req = urllib.request.Request(url, data=body, headers=headers)
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read())
+
+
+def fetch_social_profile(provider: str, code: str, state: str, redirect_uri: str) -> dict:
+    cfg = OAUTH_PROVIDERS[provider]
+    client_id, client_secret = oauth_keys(provider)
+    if not client_id:
+        # 시연 모드: 실제 제공자 없이 가짜 프로필을 만든다
+        tag = secrets.token_hex(3)
+        return {"subject": f"demo-{tag}", "email": f"{provider}{tag}@example.com",
+                "emailVerified": True, "nickname": f"{cfg['name']}{tag[:4]}"}
+    form = {"grant_type": "authorization_code", "client_id": client_id,
+            "redirect_uri": redirect_uri, "code": code}
+    if client_secret:
+        form["client_secret"] = client_secret
+    if cfg.get("token_needs_state"):
+        form["state"] = state
+    token = http_json(cfg["token_url"], data=form).get("access_token")
+    if not token:
+        raise ValueError("no access_token")
+    return cfg["parse"](http_json(cfg["profile_url"], token=token))
+
+
 # ---------- DB ----------
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -130,6 +245,27 @@ CREATE TABLE IF NOT EXISTS consents (
   token_hash     TEXT NOT NULL UNIQUE, -- 가입 직후 동의 수정용 토큰의 SHA-256
   agreed_at      TEXT NOT NULL,
   updated_at     TEXT NOT NULL
+);
+-- 간편가입으로 연결된 제공자 계정 (제공자 + 제공자 쪽 회원번호가 한 사람)
+CREATE TABLE IF NOT EXISTS social_accounts (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_pk    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider   TEXT NOT NULL,
+  subject    TEXT NOT NULL,
+  email      TEXT,
+  linked_at  TEXT NOT NULL,
+  UNIQUE (provider, subject)
+);
+-- 콜백에서 받은 프로필을 가입이 끝날 때까지 잠시 보관 (토큰은 해시만 저장)
+CREATE TABLE IF NOT EXISTS social_tickets (
+  token_hash     TEXT PRIMARY KEY,
+  provider       TEXT NOT NULL,
+  subject        TEXT NOT NULL,
+  email          TEXT,
+  email_verified INTEGER NOT NULL,
+  nickname       TEXT,
+  expires_at     TEXT NOT NULL,
+  used_at        TEXT
 );
 """
 
@@ -268,12 +404,59 @@ class Store:
             return {"status": "unavailable"}
         return self._rejoin(row, phone)
 
+    # --- 간편가입 ---
+    def create_social_ticket(self, provider: str, profile: dict) -> str | None:
+        """이미 연결된 계정이면 None (가입만 다루므로 로그인으로 넘기지 않는다)."""
+        token = secrets.token_urlsafe(24)
+        email = normalize_email(profile["email"]) if profile.get("email") else None
+        with self.lock, self.conn:
+            if self.conn.execute("SELECT 1 FROM social_accounts WHERE provider = ? AND subject = ?",
+                                 (provider, profile["subject"])).fetchone():
+                return None
+            # 오래된 티켓은 여기서 같이 정리한다
+            self.conn.execute("DELETE FROM social_tickets WHERE expires_at < ?", (now(),))
+            self.conn.execute(
+                """INSERT INTO social_tickets(token_hash, provider, subject, email, email_verified, nickname, expires_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (token_digest(token), provider, profile["subject"], email, int(bool(profile.get("emailVerified"))),
+                 profile.get("nickname"), (utcnow() + SOCIAL_TICKET_TTL).isoformat(timespec="seconds")),
+            )
+        return token
+
+    def _ticket_row(self, ticket: str):
+        row = self.conn.execute("SELECT * FROM social_tickets WHERE token_hash = ?", (token_digest(ticket),)).fetchone()
+        if row is None or row["used_at"] or datetime.fromisoformat(row["expires_at"]) < utcnow():
+            raise HttpError(HTTPStatus.UNAUTHORIZED, "social_ticket_invalid",
+                            "간편가입 정보가 만료됐어요. 처음부터 다시 진행해 주세요.")
+        return row
+
+    def social_ticket(self, ticket: str) -> dict:
+        with self.lock:
+            row = self._ticket_row(ticket)
+        return {"provider": row["provider"], "providerName": OAUTH_PROVIDERS[row["provider"]]["name"],
+                "email": row["email"], "emailVerified": bool(row["email_verified"]), "nickname": row["nickname"]}
+
+    def _new_social_user_id(self, provider: str) -> str:
+        # 간편가입 회원도 내부 아이디는 필요하다. 사용자가 쓰지 않는 값으로 만든다
+        while True:
+            user_id = f"{provider}{secrets.token_hex(5)}"
+            if not self._id_taken(user_id):
+                return user_id
+
     # --- 가입 ---
     def create_user(self, data: dict, consents: dict) -> dict:
         token = secrets.token_urlsafe(24)
         email = data["email"]
         addr = data.get("address") or {}
         with self.lock, self.conn:
+            social = None
+            if data.get("socialTicket"):
+                # 간편가입: 아이디·비밀번호 없이 티켓의 제공자 계정을 연결한다
+                social = self._ticket_row(data["socialTicket"])
+                if self.conn.execute("SELECT 1 FROM social_accounts WHERE provider = ? AND subject = ?",
+                                     (social["provider"], social["subject"])).fetchone():
+                    raise Conflict("social_already_linked", "이미 가입된 간편가입 계정이에요.")
+                data = {**data, "userId": self._new_social_user_id(social["provider"])}
             # 동시에 같은 아이디/닉네임/이메일로 가입하는 경우를 막기 위해 트랜잭션 안에서 다시 확인
             if self._id_taken(data["userId"]):
                 raise Conflict("id_taken", "이미 사용 중인 아이디예요. 다른 아이디로 다시 확인해 주세요.")
@@ -305,7 +488,8 @@ class Store:
                                      referrer_pk, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    data["userId"], email, hash_secret(data["password"]),
+                    # 간편가입 회원은 비밀번호가 없다 ("!" 는 어떤 비밀번호와도 맞지 않는 값)
+                    data["userId"], email, "!" if social else hash_secret(data["password"]),
                     data["name"], data["phone"], data["nickname"],
                     addr.get("zipcode"), addr.get("address1"), addr.get("address2"),
                     member_type, first_joined_at, referrer_pk, now(),
@@ -315,8 +499,16 @@ class Store:
             # 다시 회원이 되었으므로 탈퇴 이력은 지운다
             self.conn.execute("DELETE FROM email_history WHERE email = ?", (email,))
             self._write_consents(user_pk, consents, token_digest(token), insert=True)
+            if social:
+                self.conn.execute(
+                    "INSERT INTO social_accounts(user_pk, provider, subject, email, linked_at) VALUES (?, ?, ?, ?, ?)",
+                    (user_pk, social["provider"], social["subject"], social["email"], now()),
+                )
+                self.conn.execute("UPDATE social_tickets SET used_at = ? WHERE token_hash = ?",
+                                  (now(), social["token_hash"]))
         return {"userId": data["userId"], "nickname": data["nickname"], "consentToken": token,
-                "memberType": member_type, "firstJoinedAt": first_joined_at}
+                "memberType": member_type, "firstJoinedAt": first_joined_at,
+                "socialProvider": social["provider"] if social else None}
 
     def update_consents(self, token: str, consents: dict) -> None:
         with self.lock, self.conn:
@@ -371,12 +563,18 @@ def bad_request(message: str) -> HttpError:
 
 # ---------- 입력 검증 ----------
 def validate_signup(body: dict) -> dict:
-    """검증하면서 저장할 형태로 정리한 새 dict 를 돌려준다."""
-    user_id = body.get("userId", "")
-    if not isinstance(user_id, str) or not ID_RE.match(user_id):
-        raise bad_request(ID_RULE_MSG)
-    if not password_ok(body.get("password", "")):
-        raise bad_request("비밀번호 규칙을 확인해 주세요.")
+    """검증하면서 저장할 형태로 정리한 새 dict 를 돌려준다.
+    socialTicket 이 있으면 간편가입이라 아이디·비밀번호를 받지 않는다 (티켓은 저장할 때 확인)."""
+    social_ticket = body.get("socialTicket") or None
+    if social_ticket is not None and not isinstance(social_ticket, str):
+        raise HttpError(HTTPStatus.UNAUTHORIZED, "social_ticket_invalid",
+                        "간편가입 정보가 만료됐어요. 처음부터 다시 진행해 주세요.")
+    user_id = "" if social_ticket else body.get("userId", "")
+    if not social_ticket:
+        if not isinstance(user_id, str) or not ID_RE.match(user_id):
+            raise bad_request(ID_RULE_MSG)
+        if not password_ok(body.get("password", "")):
+            raise bad_request("비밀번호 규칙을 확인해 주세요.")
     nickname = body.get("nickname", "")
     if not isinstance(nickname, str) or not NICK_RE.match(nickname.strip()):
         raise bad_request(NICK_RULE_MSG)
@@ -413,7 +611,8 @@ def validate_signup(body: dict) -> dict:
             raise HttpError(HTTPStatus.BAD_REQUEST, "referrer_self", "본인 아이디는 추천인으로 입력할 수 없어요.")
 
     return {
-        "userId": user_id, "password": body["password"], "nickname": nickname.strip(),
+        "userId": user_id, "password": body.get("password"), "socialTicket": social_ticket,
+        "nickname": nickname.strip(),
         "name": name.strip(), "phone": normalize_phone(phone.strip()), "email": normalize_email(email),
         "address": clean_addr, "referrer": referrer,
     }
@@ -445,13 +644,19 @@ def validate_consents(c) -> dict:
 # ---------- HTTP ----------
 class Handler(BaseHTTPRequestHandler):
     store: Store = None  # main 에서 주입
+    base_url = ""        # main 에서 주입. 제공자에 등록한 redirect URI 의 앞부분
     server_version = "SignupPrototype/1.0"
+    # OAuth state: 제공자에 다녀오는 동안만 메모리에 둔다 {state: (제공자, 만료 시각)}
+    oauth_states: dict = {}
+    oauth_lock = threading.Lock()
 
     def log_message(self, fmt, *args):  # 비밀번호 등이 로그에 남지 않도록 경로만 기록
         print(f"{self.command} {urlparse(self.path).path} -> {args[1] if len(args) > 1 else ''}", flush=True)
 
-    def _send(self, status, body: bytes, ctype: str):
+    def _send(self, status, body: bytes, ctype: str, headers: dict | None = None):
         self.send_response(status)
+        for k, v in (headers or {}).items():
+            self.send_header(k, v)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Content-Type-Options", "nosniff")
@@ -461,6 +666,67 @@ class Handler(BaseHTTPRequestHandler):
 
     def _json(self, status, payload):
         self._send(status, json.dumps(payload, ensure_ascii=False).encode(), "application/json; charset=utf-8")
+
+    def _redirect(self, location: str, cookie: str | None = None):
+        self._send(HTTPStatus.FOUND, b"", "text/plain; charset=utf-8",
+                   {"Location": location, **({"Set-Cookie": cookie} if cookie else {})})
+
+    def _cookie(self, name: str) -> str:
+        for part in (self.headers.get("Cookie") or "").split(";"):
+            k, _, v = part.strip().partition("=")
+            if k == name:
+                return v
+        return ""
+
+    # --- 간편가입 ---
+    def _oauth_start(self, provider: str):
+        cfg = OAUTH_PROVIDERS[provider]
+        client_id = oauth_keys(provider)[0]
+        base = urlparse(self.base_url)
+        if client_id and self.headers.get("Host") != base.netloc:
+            # state 쿠키가 콜백 주소와 같은 호스트에 남도록 등록한 주소로 다시 시작한다
+            return self._redirect(f"{self.base_url}/api/auth/{provider}/start")
+        state = secrets.token_urlsafe(16)
+        with self.oauth_lock:
+            t = utcnow()
+            for s in [s for s, (_, exp) in self.oauth_states.items() if exp < t]:
+                del self.oauth_states[s]
+            self.oauth_states[state] = (provider, t + OAUTH_STATE_TTL)
+        cookie = (f"oauth_state={state}; Path=/api/auth; Max-Age={int(OAUTH_STATE_TTL.total_seconds())}; "
+                  "HttpOnly; SameSite=Lax")
+        redirect_uri = f"{self.base_url}/api/auth/{provider}/callback"
+        if not client_id:
+            # 시연 모드: 제공자 화면 대신 바로 콜백으로
+            return self._redirect(f"/api/auth/{provider}/callback?" + urlencode({"code": "demo", "state": state}), cookie)
+        params = {"response_type": "code", "client_id": client_id, "redirect_uri": redirect_uri, "state": state}
+        if cfg["scope"]:
+            params["scope"] = cfg["scope"]
+        self._redirect(f"{cfg['authorize_url']}?{urlencode(params)}", cookie)
+
+    def _oauth_callback(self, provider: str, query: dict):
+        arg = lambda k: (query.get(k) or [""])[0]
+        clear = "oauth_state=; Path=/api/auth; Max-Age=0; HttpOnly; SameSite=Lax"
+        fail = lambda reason: self._redirect(f"/#social_error={reason}", clear)
+        state = arg("state")
+        with self.oauth_lock:
+            saved = self.oauth_states.pop(state, None)
+        # state 가 서버에 있고, 이 브라우저 쿠키와 같고, 같은 제공자여야 한다 (다른 사람이 만든 콜백 차단)
+        if not state or saved is None or saved[0] != provider or saved[1] < utcnow() \
+           or not secrets.compare_digest(self._cookie("oauth_state"), state):
+            return fail("state")
+        if arg("error"):
+            return fail("denied")  # 사용자가 제공자 화면에서 취소
+        try:
+            profile = fetch_social_profile(provider, arg("code"), state,
+                                           f"{self.base_url}/api/auth/{provider}/callback")
+        except (urllib.error.URLError, ValueError, KeyError, TimeoutError) as e:
+            print("oauth error:", provider, repr(e), flush=True)
+            return fail("provider")
+        ticket = self.store.create_social_ticket(provider, profile)
+        if ticket is None:
+            return fail("already")
+        # 티켓은 # 뒤에 붙여 서버 로그·Referer 로 새지 않게 한다
+        self._redirect(f"/#social={ticket}", clear)
 
     def _read_json(self) -> dict:
         if "application/json" not in (self.headers.get("Content-Type") or ""):
@@ -519,6 +785,15 @@ class Handler(BaseHTTPRequestHandler):
             if not NICK_RE.match(nickname):
                 raise bad_request(NICK_RULE_MSG)
             self._json(HTTPStatus.OK, {"available": self.store.nickname_available(nickname)})
+        elif url.path == "/api/auth/providers":
+            self._json(HTTPStatus.OK, {"providers": [
+                {"id": p, "name": cfg["name"], "mode": oauth_mode(p)} for p, cfg in OAUTH_PROVIDERS.items()
+            ]})
+        elif (m := re.fullmatch(r"/api/auth/([a-z]+)/(start|callback)", url.path)) and m[1] in OAUTH_PROVIDERS:
+            if m[2] == "start":
+                self._oauth_start(m[1])
+            else:
+                self._oauth_callback(m[1], query)
         elif url.path == "/api/users/check-referrer":
             user_id = arg("userId").strip().lower()
             if not ID_RE.match(user_id):
@@ -537,6 +812,12 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(phone, str):
                 raise bad_request("휴대폰 번호를 확인해 주세요.")
             self._json(HTTPStatus.OK, self.store.email_status(email, phone))
+        elif path == "/api/auth/ticket":
+            ticket = self._read_json().get("ticket")
+            if not isinstance(ticket, str) or not ticket:
+                raise HttpError(HTTPStatus.UNAUTHORIZED, "social_ticket_invalid",
+                                "간편가입 정보가 만료됐어요. 처음부터 다시 진행해 주세요.")
+            self._json(HTTPStatus.OK, self.store.social_ticket(ticket))
         elif path == "/api/signup":
             body = self._read_json()
             data = validate_signup(body)
@@ -560,9 +841,13 @@ def main():
     parser.add_argument("--db", default=str(ROOT / "signup.db"))
     args = parser.parse_args()
 
+    load_dotenv(ROOT / ".env")
+    # 제공자 개발자 센터에 등록하는 redirect URI = PUBLIC_BASE_URL + /api/auth/{제공자}/callback
+    Handler.base_url = os.environ.get("PUBLIC_BASE_URL", f"http://localhost:{args.port}").rstrip("/")
     Handler.store = Store(Path(args.db))
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     print(f"http://{args.host}:{args.port} 에서 실행 중 (DB: {args.db}) - 끝내려면 Ctrl+C", flush=True)
+    print("간편가입: " + ", ".join(f"{cfg['name']}={oauth_mode(p)}" for p, cfg in OAUTH_PROVIDERS.items()), flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

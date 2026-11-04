@@ -45,6 +45,32 @@ Python 3.10 이상만 있으면 되고 설치할 패키지는 없습니다. 데�
 | `POST /api/signup` | 정보입력 값(닉네임 포함) + 추천인(선택) + 약관 동의 저장 → `{userId, nickname, consentToken, memberType, firstJoinedAt}` |
 | `POST /api/consents` `{consentToken, consents}` | 가입 완료 화면의 "동의 내용 수정" 저장 (토큰은 가입 후 30분 유효) |
 
+### 간편가입 (OAuth, 가입만)
+
+카카오 버튼을 누르면 OAuth 2.0 인가 코드 방식으로 제공자 계정을 받아 오고, 이어서 본인인증 → 정보 입력 → 약관 동의를 거쳐 가입합니다. **지금은 가입만** 다루고 로그인·세션은 없습니다.
+
+```
+카카오 버튼 → GET /api/auth/kakao/start      (state 를 서버와 쿠키에 저장, 제공자 로그인 화면으로)
+          → 제공자 로그인·동의
+          → GET /api/auth/kakao/callback     (state 확인 → 코드로 토큰 → 프로필)
+          → /#social=티켓                    (30분짜리 1회용 가입 티켓, 주소창에서 바로 지움)
+          → POST /api/auth/ticket            (티켓으로 이메일·닉네임을 받아 정보 입력에 채움)
+          → POST /api/signup {socialTicket}  (아이디·비밀번호 없이 가입, 제공자 계정을 연결하고 티켓 사용 처리)
+```
+
+| API | 설명 |
+| --- | --- |
+| `GET /api/auth/providers` | 제공자 목록과 모드(`live` 키 있음 / `demo` 키 없음) |
+| `GET /api/auth/{provider}/start` | 제공자 로그인 화면으로 이동 |
+| `GET /api/auth/{provider}/callback` | 제공자가 돌려보내는 주소. 실패하면 `/#social_error=denied·state·provider·already` |
+| `POST /api/auth/ticket` `{ticket}` | 티켓의 프로필 → `{provider, providerName, email, emailVerified, nickname}` |
+
+- **키 넣는 곳:** `.env.example`을 `.env`로 복사해 `OAUTH_KAKAO_CLIENT_ID` 등을 채웁니다. `.env`는 git에 올라가지 않습니다. 제공자 개발자 센터에는 redirect URI로 `PUBLIC_BASE_URL/api/auth/kakao/callback`(기본 `http://localhost:8000/api/auth/kakao/callback`)을 등록하세요.
+- **키가 없으면 시연 모드:** 제공자 화면 없이 바로 콜백으로 돌아와 가짜 프로필(`kakao1a2b3c@example.com` 등)로 같은 흐름을 진행합니다. 서버를 켤 때 제공자별 모드를 출력합니다.
+- **제공자 늘리기:** `server.py`의 `OAUTH_PROVIDERS`에 카카오·네이버·구글이 들어 있습니다. 화면에는 카카오 버튼만 있고, 다른 제공자는 `data-oauth="naver"` 같은 버튼만 추가하면 됩니다. 앱카드는 OAuth가 아니라 그대로 "준비 중"입니다.
+- 간편가입 회원은 내부 아이디(`kakao` + 난수)를 자동으로 받고 비밀번호는 없습니다. 같은 제공자 계정으로 두 번 가입할 수 없습니다.
+- 본인인증, 닉네임 중복확인, 탈퇴 이메일 처리, 추천인, 약관 동의는 일반 가입과 똑같이 거칩니다.
+
 ### 탈퇴한 이메일로 다시 가입할 때
 
 이메일을 입력하면 "탈퇴한 이메일이에요."라고 먼저 알려 주고, 본인인증한 휴대폰으로 같은 사람인지 확인해 처리합니다.

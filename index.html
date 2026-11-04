@@ -155,6 +155,8 @@
   /* ----- 안내 / 오류 문구 ----- */
   .si-msg { margin: 8px 0 0; font-size: 13px; line-height: 1.4; display: flex; gap: 4px; align-items: flex-start; }
   .si-msg[hidden] { display: none; }
+  .si-social { margin: 0 0 24px; padding: 12px 16px; border-radius: var(--si-radius); background: #E6F2FF; color: var(--si-content-2); font-size: 14px; line-height: 1.5; }
+  .si-social[hidden], .si-field[hidden] { display: none; }
   .si-msg.is-error { color: var(--si-negative); }
   .si-msg.is-success { color: var(--si-positive); }
   .si-msg.is-info { color: var(--si-content-3); }
@@ -606,7 +608,7 @@ section{padding:0 16px;margin-top:20px}
 
     <div class="divider"><span>SNS로 간편 가입하기</span></div>
     <div class="sns">
-      <button class="sns-btn kakao" type="button" data-method="카카오 간편가입" aria-label="카카오로 가입">
+      <button class="sns-btn kakao" type="button" data-oauth="kakao" aria-label="카카오로 가입">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4C7.6 4 4 6.8 4 10.3c0 2.2 1.4 4.1 3.6 5.2L6.8 19l3.7-2.3c.5.1 1 .1 1.5.1 4.4 0 8-2.8 8-6.5S16.4 4 12 4z"/></svg>
       </button>
       <button class="sns-btn appcard" type="button" data-method="앱카드 간편가입" aria-label="앱카드로 가입">앱카드</button>
@@ -676,6 +678,9 @@ section{padding:0 16px;margin-top:20px}
     <p class="si-desc"><span class="si-req">*</span> 표시는 필수 입력 항목이에요.</p>
 
     <form id="siForm" novalidate autocomplete="on">
+
+      <!-- 간편가입으로 왔을 때만 보인다. 이때 아이디·비밀번호 칸은 숨긴다 -->
+      <p class="si-social" id="siSocial" role="status" hidden></p>
 
       <!-- 아이디 -->
       <div class="si-field" data-field="userId">
@@ -891,6 +896,7 @@ section{padding:0 16px;margin-top:20px}
   <section>
     <div class="card info">
       <div class="ch">회원정보</div>
+      <div><span>가입 방식</span><span id="doneMethod">통합회원 아이디</span></div>
       <div><span>닉네임</span><span id="doneNick">-</span></div>
       <div><span>휴대폰</span><span id="donePhone">010-50**-43**</span></div>
       <div><span>이메일</span><span id="doneEmail">gu********@naver.com</span></div>
@@ -944,6 +950,36 @@ const SignupAPI=(()=>{
 })();
 let signupInfo=null;   // 정보입력 값 (비밀번호 포함, 메모리에만 보관)
 let signupResult=null; // 가입 완료 후 받은 값 (동의 수정용 토큰)
+let socialSignup=null; // 간편가입 티켓으로 받은 프로필
+
+// ===== 간편가입 (OAuth) =====
+// 버튼 → 서버 /api/auth/{제공자}/start → 제공자 로그인 → 서버 콜백 → /#social=티켓 으로 돌아온다.
+// 가입만 다룬다: 티켓으로 프로필을 받아 본인인증 → 정보입력(아이디·비밀번호 없음) → 약관 동의로 이어간다.
+document.addEventListener("click",async e=>{
+  // 간편가입 뒤 돌아와서 통합회원 가입을 고르면 일반 가입으로 되돌린다
+  if(socialSignup&&e.target.closest('#v-entry [data-go="verification"]')){socialSignup=null;ShinInfo.setSocial(null)}
+  const b=e.target.closest("[data-oauth]");if(!b)return;
+  if(!(await SignupAPI.ready)){showToast("server.py 로 열어야 간편가입을 시험할 수 있어요.");return}
+  location.href="/api/auth/"+encodeURIComponent(b.dataset.oauth)+"/start";
+});
+const SOCIAL_ERRORS={
+  denied:"간편가입을 취소했어요.",
+  state:"간편가입을 처음부터 다시 진행해 주세요.",
+  provider:"간편가입 서비스와 연결하지 못했어요. 잠시 후 다시 시도해 주세요.",
+  already:"이미 이 계정으로 가입했어요."
+};
+document.addEventListener("DOMContentLoaded",async()=>{
+  const h=new URLSearchParams(location.hash.slice(1)),ticket=h.get("social"),err=h.get("social_error");
+  if(!ticket&&!err)return;
+  history.replaceState({s:"entry"},"",location.pathname); // 티켓이 주소창·기록에 남지 않게
+  if(err){showToast(SOCIAL_ERRORS[err]||SOCIAL_ERRORS.state);return}
+  try{
+    socialSignup={ticket,...await SignupAPI.call("/api/auth/ticket",{ticket})};
+    ShinInfo.setSocial(socialSignup);
+    showToast(`${socialSignup.providerName} 계정을 확인했어요. 본인인증을 진행해 주세요.`);
+    go("verification");
+  }catch(e){showToast(e.message)}
+});
 
 // 정보입력 완료 → 약관 동의로 이동, 완료 화면의 회원정보에 마스킹해서 반영
 const mask={
@@ -957,6 +993,7 @@ document.addEventListener("shin:info-complete",e=>{
   // 서버 없이 열었을 때 완료 화면 문구에 쓰는 값 (서버가 있으면 가입 응답의 memberType 이 우선)
   signupInfo.memberHint=emailCheck&&emailCheck.status==="returning"?"returning":"new";
   $id("doneNick").textContent=d.nickname;
+  $id("doneMethod").textContent=socialSignup?`${socialSignup.providerName} 간편가입`:"통합회원 아이디";
   $id("donePhone").textContent=mask.phone(d.phone);$id("doneEmail").textContent=mask.email(d.email);
   $id("doneAddr").textContent=d.address?d.address.address1.split(" ").slice(0,3).join(" ")+", *****":"입력하지 않았어요";
   document.dispatchEvent(new CustomEvent("shin:consent-open"));
@@ -1086,6 +1123,7 @@ form.addEventListener("submit", (e) => {
     idChecked: false,     // 중복확인 통과한 아이디
     checkedId: '',
     checkedNick: '',      // 중복확인 통과한 닉네임
+    social: null,         // 간편가입이면 { ticket, provider, providerName, email, nickname }
     pwTouched: false,
     pw2Touched: false,
     addrSelected: false
@@ -1522,8 +1560,10 @@ form.addEventListener("submit", (e) => {
 
   /* ---------- 다음 버튼 ---------- */
   function isComplete() {
-    return state.idChecked && state.checkedId === idInput.value &&
-      pwValid(pw.value) && pw.value === pw2.value &&
+    // 간편가입은 아이디·비밀번호를 만들지 않는다
+    var account = state.social ||
+      (state.idChecked && state.checkedId === idInput.value && pwValid(pw.value) && pw.value === pw2.value);
+    return !!account &&
       !!state.checkedNick && state.checkedNick === nickValue() &&
       !!$('siName').value && !!$('siPhone').value &&
       emailOk();
@@ -1532,9 +1572,9 @@ form.addEventListener("submit", (e) => {
   function updateSubmit() { $('siSubmit').disabled = !isComplete(); }
 
   function collect() {
-    return {
-      userId: idInput.value,
-      password: pw.value,
+    var account = state.social ? { socialTicket: state.social.ticket }
+                               : { userId: idInput.value, password: pw.value };
+    return Object.assign(account, {
       nickname: nickValue(),
       name: $('siName').value,
       phone: $('siPhone').value,
@@ -1545,7 +1585,32 @@ form.addEventListener("submit", (e) => {
         address1: addr1.value,
         address2: addr2.value.trim()
       } : null
-    };
+    });
+  }
+
+  /* ---------- 간편가입 ---------- */
+  // 제공자에서 받은 이메일·닉네임을 채우고, 아이디·비밀번호 칸은 숨긴다 (null 이면 일반 가입으로 되돌림)
+  function setSocial(s) {
+    state.social = s || null;
+    ['userId', 'password', 'passwordConfirm'].forEach(function (f) {
+      form.querySelector('[data-field="' + f + '"]').hidden = !!s;
+    });
+    var box = $('siSocial');
+    box.hidden = !s;
+    if (s) {
+      box.textContent = s.providerName + ' 계정으로 가입해요. 아이디와 비밀번호는 만들지 않아요.';
+      if (s.nickname && !nickValue()) {
+        nickInput.value = s.nickname.replace(/[^가-힣A-Za-z0-9]/g, '').slice(0, 10);
+        nickInput.dispatchEvent(new Event('input'));
+      }
+      if (s.email && !emailId.value) {
+        // 이메일을 통째로 넣으면 아이디·도메인으로 자동 분리된다
+        emailId.value = s.email;
+        emailId.dispatchEvent(new Event('input'));
+        if (emailValid()) emailBtn.click();
+      }
+    }
+    updateSubmit();
   }
 
   form.addEventListener('submit', function (e) {
@@ -1581,7 +1646,8 @@ form.addEventListener("submit", (e) => {
     config: config,
     setVerified: setVerified,
     getData: collect,
-    isComplete: isComplete
+    isComplete: isComplete,
+    setSocial: setSocial
   };
 
   validatePw();
@@ -1696,6 +1762,7 @@ $("#submit").addEventListener("click",async()=>{
       }
     }catch(err){
       render();showToast(err.message);
+      if(err.code==="social_ticket_invalid"||err.code==="social_already_linked"){setTimeout(()=>{socialSignup=null;ShinInfo.setSocial(null);go("entry")},1200);return}
       if(String(err.code).startsWith("referrer")){ref.checked="";refMsg("err",err.message);ref.input.focus();return}
       if(["id_taken","nickname_taken","email_unavailable","invalid_input"].includes(err.code))setTimeout(()=>go("info"),1200);
       return;
