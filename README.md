@@ -24,7 +24,30 @@
 
 ## 실행
 
-빌드 없이 `index.html`을 브라우저에서 열면 됩니다. 데스크톱에서도 휴대폰 폭의 프레임으로 보입니다.
+빌드 없이 `index.html`을 브라우저에서 열면 됩니다. 데스크톱에서도 휴대폰 폭의 프레임으로 보입니다. 이때는 서버 없이 모의 응답으로 동작합니다.
+
+### 백엔드와 함께 실행
+
+```bash
+python3 server.py            # http://localhost:8000
+python3 server.py --port 8080 --db signup.db
+```
+
+Python 3.10 이상만 있으면 되고 설치할 패키지는 없습니다. 데이터는 SQLite 파일(`signup.db`, git에서 제외)에 저장됩니다.
+
+| API | 설명 |
+| --- | --- |
+| `GET /api/health` | 서버 동작 확인 |
+| `GET /api/users/check-id?userId=` | 아이디 중복확인 → `{available}` |
+| `POST /api/email/check` `{email}` | 이메일 가입 가능 여부 → `{status: available \| rejoin_available \| unavailable}` |
+| `POST /api/signup` | 정보입력 값 + 약관 동의 저장 → `{userId, consentToken}` |
+| `POST /api/consents` `{consentToken, consents}` | 가입 완료 화면의 "동의 내용 수정" 저장 |
+
+- 비밀번호는 scrypt로 해시해 저장하고, 로그에는 요청 경로만 남깁니다.
+- 이미 가입된 이메일과 가입 제한 이메일은 같은 `unavailable`로 응답해 사유를 드러내지 않습니다.
+- 서버는 `index.html`만 제공하고 DB 파일 등 다른 파일은 노출하지 않습니다.
+- 시연용 데이터: 예약 아이디 `admin`·`shinsegae`·`test1234`·`gudals4360`, 이메일 `rejoin@example.com`(재가입 가능), `blocked@example.com`(가입 제한).
+- 본인인증·이메일 소유 확인은 하지 않는 시연용 서버입니다.
 
 - 글꼴(Pretendard)과 주소 검색(다음 우편번호)은 인터넷에서 불러옵니다. 오프라인에서는 기본 글꼴로 보이고 주소 검색은 동작하지 않습니다.
 
@@ -89,6 +112,7 @@
 ```
 .
 ├── index.html   # 전체 프로토타입 (화면 5개, CSS·JS 포함)
+├── server.py    # 백엔드 (Python 표준 라이브러리 + SQLite)
 ├── gs-shop.md   # 디자인 토큰 명세
 └── README.md
 ```
@@ -107,4 +131,3 @@
 
 - 필수 약관 3건(이용약관, 개인정보 수집·이용, 만 14세 이상)의 문구와 "보기" 약관 전문은 임의 값입니다. 실제 문구로 교체가 필요합니다.
 - 서비스 브랜드 색과 로고 자리 텍스트는 기존 화면 캡처에서 눈대중으로 옮긴 값입니다.
-- 동의 결과는 서버에 저장되지 않고 화면에서만 확인할 수 있습니다.

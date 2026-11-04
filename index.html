@@ -882,6 +882,25 @@ function showToast(msg){
   if(!t){t=document.createElement("div");t.className="ev-toast";t.setAttribute("role","status");document.body.append(t)}
   t.textContent=msg;t.classList.add("show");clearTimeout(showToast.t);showToast.t=setTimeout(()=>t.classList.remove("show"),2600);
 }
+// ===== 백엔드 연결 =====
+// server.py 로 열면 실제 API를 쓰고, index.html 만 열면(서버 없음) 기존 모의 응답으로 동작한다.
+const SignupAPI=(()=>{
+  const ready=/^https?:$/.test(location.protocol)
+    ?fetch("/api/health").then(r=>r.ok&&r.json()).then(d=>!!(d&&d.ok)).catch(()=>false)
+    :Promise.resolve(false);
+  async function call(path,body){
+    const opt=body===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)};
+    let r;
+    try{r=await fetch(path,opt)}catch(e){const err=new Error("서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.");err.code="network";throw err}
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok){const err=new Error(data.message||"잠시 후 다시 시도해 주세요.");err.status=r.status;err.code=data.error;throw err}
+    return data;
+  }
+  return {ready,call};
+})();
+let signupInfo=null;   // 정보입력 값 (비밀번호 포함, 메모리에만 보관)
+let signupResult=null; // 가입 완료 후 받은 값 (동의 수정용 토큰)
+
 // 정보입력 완료 → 약관 동의로 이동, 완료 화면의 회원정보에 마스킹해서 반영
 const mask={
   name:n=>n.length<3?n[0]+"*":n[0]+"*".repeat(n.length-2)+n.slice(-1),
@@ -890,6 +909,7 @@ const mask={
 };
 document.addEventListener("shin:info-complete",e=>{
   const d=e.detail,v=document.querySelectorAll("#done .info div:not(.ch) span:last-child");
+  signupInfo=d;signupResult=null;
   document.querySelector("#done .hero h1").innerHTML=`${mask.name(d.name)} 님,<br>통합 ID 가입이 완료됐어요`;
   v[0].textContent=mask.phone(d.phone);v[1].textContent=mask.email(d.email);
   v[2].textContent=d.address?d.address.address1.split(" ").slice(0,3).join(" ")+", *****":"입력하지 않았어요";
@@ -937,28 +957,26 @@ form.addEventListener("submit", (e) => {
 
   /* ===== 다른 화면/서버와 연결할 때 바꾸는 부분 ===== */
   var config = {
-    // 아이디 중복확인. 서버가 생기면 이 함수만 fetch로 바꾸면 된다. true = 사용 가능
+    // 아이디 중복확인. true = 사용 가능
     checkIdAvailable: function (id) {
-      var taken = ['admin', 'shinsegae', 'test1234', 'gudals4360'];
-      return new Promise(function (resolve) {
-        setTimeout(function () { resolve(taken.indexOf(id) === -1); }, 300);
+      return SignupAPI.ready.then(function (on) {
+        if (on) return SignupAPI.call('/api/users/check-id?userId=' + encodeURIComponent(id))
+          .then(function (d) { return d.available; });
+        return mockCheckId(id);
       });
     },
     /*
-     * [프로토타입 · 모의 응답] 실제 탈퇴 이력/가입 제한을 조회하는 코드가 아니다.
-     * 서버가 생기면 이 함수만 API 호출로 바꾼다. resolve 값:
+     * 이메일 가입 가능 여부. resolve 값:
      *   'available'        신규 이메일
      *   'rejoin_available' 이전 가입 이력이 있으나 재가입 허용
-     *   'unavailable'      가입 제한
-     * 모의 규칙: 아이디가 rejoin 으로 시작 → 재가입 가능, blocked 로 시작 → 가입 제한, 그 외 → 신규.
+     *   'unavailable'      가입 제한 또는 이미 가입됨 (사유는 구분하지 않음)
      * (실제 서비스에서는 이메일 소유 확인 전에 탈퇴 이력을 노출하지 않도록 정책 검토 필요)
      */
     checkEmail: function (email) {
-      return new Promise(function (resolve) {
-        setTimeout(function () {
-          var id = email.split('@')[0].toLowerCase();
-          resolve(id.indexOf('rejoin') === 0 ? 'rejoin_available' : id.indexOf('blocked') === 0 ? 'unavailable' : 'available');
-        }, 700);
+      return SignupAPI.ready.then(function (on) {
+        if (on) return SignupAPI.call('/api/email/check', { email: email })
+          .then(function (d) { return d.status; });
+        return mockCheckEmail(email);
       });
     },
     // 다음 단계 주소. 비워두면 이동하지 않고 이벤트만 보낸다.
@@ -966,6 +984,26 @@ form.addEventListener("submit", (e) => {
     // 본인인증 값이 없을 때 보여줄 예시 (화면 확인용)
     demoVerified: { name: '김신세', phone: '010-1234-5678' }
   };
+
+  /*
+   * ===== 서버 없이(index.html 만) 열었을 때 쓰는 모의 응답 =====
+   * 실제 탈퇴 이력/가입 제한을 조회하는 코드가 아니다.
+   * 이메일 모의 규칙: 아이디가 rejoin 으로 시작 → 재가입 가능, blocked 로 시작 → 가입 제한, 그 외 → 신규.
+   */
+  function mockCheckId(id) {
+    var taken = ['admin', 'shinsegae', 'test1234', 'gudals4360'];
+    return new Promise(function (resolve) {
+      setTimeout(function () { resolve(taken.indexOf(id) === -1); }, 300);
+    });
+  }
+  function mockCheckEmail(email) {
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        var id = email.split('@')[0].toLowerCase();
+        resolve(id.indexOf('rejoin') === 0 ? 'rejoin_available' : id.indexOf('blocked') === 0 ? 'unavailable' : 'available');
+      }, 700);
+    });
+  }
 
   var $ = function (id) { return document.getElementById(id); };
   var form = $('siForm');
@@ -1467,7 +1505,24 @@ document.addEventListener("click",e=>{
   render();
 });
 
-$("#submit").addEventListener("click",()=>{
+$("#submit").addEventListener("click",async()=>{
+  const btn=$("#submit");
+  if(await SignupAPI.ready){
+    if(!signupInfo){showToast("정보입력부터 진행해 주세요.");go("info");return}
+    const consents={required:state.req,services:state.svc,marketing:state.mk};
+    btn.disabled=true;btn.textContent=signupResult?"저장 중":"가입 처리 중";
+    try{
+      if(signupResult) await SignupAPI.call("/api/consents",{consentToken:signupResult.consentToken,consents});
+      else{
+        signupResult=await SignupAPI.call("/api/signup",{...signupInfo,consents});
+        signupInfo={...signupInfo,password:undefined}; // 가입 후에는 비밀번호를 들고 있지 않는다
+      }
+    }catch(err){
+      render();showToast(err.message);
+      if(["id_taken","email_unavailable","invalid_input"].includes(err.code))setTimeout(()=>go("info"),1200);
+      return;
+    }
+  }
   const d=new Date();$("#doneDate").textContent=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
   const sc=vals(state.svc).filter(Boolean).length,p=names(state.mk.point),f=names(state.mk.duty);
   const item=(label,sub,y)=>`<div class="li"><span>${label}${sub?`<small>${sub}</small>`:""}</span>${badge(y)}</div>`;
